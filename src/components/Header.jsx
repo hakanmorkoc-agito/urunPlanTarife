@@ -1,11 +1,11 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Home, X, RefreshCw, PieChart, BarChart3 } from 'lucide-react'
-import { useState } from 'react'
+import { useDashboardView } from '../context/DashboardViewContext'
 
 const Header = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const [chartType, setChartType] = useState('donut')
+  const { chartType, setChartType } = useDashboardView()
 
   const getBreadcrumb = () => {
     if (location.pathname === '/dashboard' || location.pathname === '/') {

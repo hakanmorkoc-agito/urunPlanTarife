@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { X, Info } from 'lucide-react'
 
 const PlanDefinition = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     // Genel Bilgiler
@@ -30,6 +31,15 @@ const PlanDefinition = () => {
       fetchPlanData(id)
     }
   }, [id])
+
+  useEffect(() => {
+    if (!id && location.state?.initialSelections) {
+      setFormData((prev) => ({
+        ...prev,
+        ...location.state.initialSelections
+      }))
+    }
+  }, [id, location.state])
 
   const fetchPlanData = async (planId) => {
     try {
