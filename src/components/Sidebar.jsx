@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   Search,
@@ -19,6 +19,8 @@ const Sidebar = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [activeSubmenu, setActiveSubmenu] = useState(null)
+  const [submenuPosition, setSubmenuPosition] = useState({ top: 0, left: 0 })
+  const submenuRef = useRef(null)
 
   const menuItems = [
     { id: 'search', icon: Search, label: 'Arama Yap' },
@@ -81,41 +83,94 @@ const Sidebar = () => {
     setActiveSubmenu(null)
   }
 
+  useEffect(() => {
+    if (activeSubmenu) {
+      const submenuButton = document.querySelector(`[data-menu-id="${activeSubmenu}"]`)
+      if (submenuButton) {
+        const rect = submenuButton.getBoundingClientRect()
+        setSubmenuPosition({
+          top: rect.top + (rect.height / 2),
+          left: rect.right + 16
+        })
+      }
+    }
+  }, [activeSubmenu])
+
   return (
-    <aside className="relative z-20 w-16 flex flex-col items-center bg-[#8746FA] text-white shadow-lg">
-      <nav className="flex-1 flex flex-col items-center justify-center space-y-3 py-10 px-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
-        {menuItems.map((item) => {
-          const Icon = item.icon
-          const isActive = isItemActive(item.path, item.active)
+    <>
+      <aside className="relative z-20 w-16 flex flex-col items-center bg-[#8746FA] text-white shadow-lg overflow-hidden">
+        {/* Logo */}
+        <div className="pt-6 pb-4">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label="Dashboard'a dön"
+          >
+            <span className="text-2xl font-bold text-white">a</span>
+          </button>
+        </div>
+        <nav className="flex-1 flex flex-col items-center justify-center space-y-3 py-4 px-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+          {menuItems.map((item) => {
+            const Icon = item.icon
+            const isActive = isItemActive(item.path, item.active)
 
-          return (
-            <button
-              key={item.id}
-              onClick={() => handleMenuClick(item)}
-              className={`group relative flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-200 ${
-                isActive
-                  ? 'bg-white text-[#8746FA] shadow-lg ring-2 ring-white/40'
-                  : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
-              aria-label={item.label}
-            >
-              <Icon className="h-4 w-4" strokeWidth={1.8} />
-              <span className="pointer-events-none absolute left-[3.25rem] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-black/85 px-3 py-1 text-xs font-medium text-white opacity-0 transition-all duration-150 group-hover:opacity-100">
-                {item.label}
-              </span>
-            </button>
-          )
-        })}
-      </nav>
+            return (
+              <button
+                key={item.id}
+                data-menu-id={item.id}
+                onClick={() => handleMenuClick(item)}
+                onMouseEnter={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  const tooltip = document.getElementById(`tooltip-${item.id}`)
+                  if (tooltip) {
+                    const tooltipHeight = tooltip.offsetHeight || 30
+                    tooltip.style.left = `${rect.right + 12}px`
+                    // Icon'un ortasına hizala
+                    tooltip.style.top = `${rect.top + (rect.height / 2) - (tooltipHeight / 2)}px`
+                    tooltip.style.opacity = '1'
+                  }
+                }}
+                onMouseLeave={() => {
+                  const tooltip = document.getElementById(`tooltip-${item.id}`)
+                  if (tooltip) {
+                    tooltip.style.opacity = '0'
+                  }
+                }}
+                className={`group relative flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-200 ${
+                  isActive
+                    ? 'bg-white text-[#8746FA] shadow-lg ring-2 ring-white/40'
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+                aria-label={item.label}
+              >
+                <Icon className="h-4 w-4" strokeWidth={1.8} />
+              </button>
+            )
+          })}
+        </nav>
 
-      {activeSubmenu && (
-        <div className="absolute left-full top-1/2 ml-4 w-64 -translate-y-1/2 rounded-xl border border-[#8746FA]/10 bg-white text-gray-800 shadow-xl">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <h2 className="text-base font-semibold text-[#8746FA]">Ürün Tarife Plan Tanımları</h2>
-          </div>
-          <ul className="py-2">
-            {menuItems
-              .find((item) => item.id === activeSubmenu)?.submenu?.map((submenuItem) => (
+      </aside>
+
+      {/* Submenu - Sidebar dışında, fixed pozisyon */}
+      {activeSubmenu && (() => {
+        const activeItem = menuItems.find((item) => item.id === activeSubmenu)
+        if (!activeItem?.submenu) return null
+        
+        return (
+          <div 
+            ref={submenuRef}
+            className="fixed z-[90] w-64 rounded-xl border border-[#8746FA]/10 bg-white text-gray-800 shadow-xl"
+            style={{
+              left: `${submenuPosition.left}px`,
+              top: `${submenuPosition.top}px`,
+              transform: 'translateY(-50%)'
+            }}
+          >
+            <div className="px-4 py-3 border-b border-gray-100">
+              <h2 className="text-base font-semibold text-[#8746FA]">Ürün Tarife Plan Tanımları</h2>
+            </div>
+            <ul className="py-2">
+              {activeItem.submenu.map((submenuItem) => (
                 <li key={submenuItem.label}>
                   <button
                     onClick={() => handleSubmenuClick(submenuItem)}
@@ -126,10 +181,23 @@ const Sidebar = () => {
                   </button>
                 </li>
               ))}
-          </ul>
+            </ul>
+          </div>
+        )
+      })()}
+
+      {/* Tooltips - Sidebar dışında, fixed pozisyon */}
+      {menuItems.map((item) => (
+        <div
+          key={item.id}
+          id={`tooltip-${item.id}`}
+          className="pointer-events-none fixed z-[100] whitespace-nowrap rounded-lg bg-black px-3 py-1.5 text-xs font-medium text-white opacity-0 transition-opacity duration-150 shadow-lg"
+          style={{ top: 0, left: 0 }}
+        >
+          {item.label}
         </div>
-      )}
-    </aside>
+      ))}
+    </>
   )
 }
 

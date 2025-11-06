@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import StatCard from '../components/StatCard'
 import { useDashboardView } from '../context/DashboardViewContext'
+import { PieChart, BarChart3 } from 'lucide-react'
 
 const Dashboard = () => {
-  const { chartType } = useDashboardView()
+  const { chartType, setChartType } = useDashboardView()
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const currentYear = new Date().getFullYear()
@@ -150,21 +151,48 @@ const Dashboard = () => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Ürün Tarife İstatistikleri</h1>
         <div className="flex items-center gap-3">
-          <label htmlFor="year-filter" className="text-sm font-medium text-gray-600">
-            Yıla Göre Filtrele
-          </label>
-          <select
-            id="year-filter"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/40"
-          >
-            {yearOptions.map((year) => (
-              <option key={year} value={year}>
-                {year === 'all' ? 'Tümü' : year}
-              </option>
-            ))}
-          </select>
+          {/* Chart Type Selector */}
+          <div className="flex items-center gap-1 rounded-full border border-gray-100 bg-white px-1.5 py-1 shadow-sm">
+            <button
+              onClick={() => setChartType('donut')}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                chartType === 'donut'
+                  ? 'bg-[#8746FA] text-white shadow'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <PieChart className="h-3.5 w-3.5" />
+              <span>Pasta Dilim</span>
+            </button>
+            <button
+              onClick={() => setChartType('column')}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                chartType === 'column'
+                  ? 'bg-[#8746FA] text-white shadow'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <BarChart3 className="h-3.5 w-3.5" />
+              <span>Kolon</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <label htmlFor="year-filter" className="text-sm font-medium text-gray-600">
+              Yıla Göre Filtrele
+            </label>
+            <select
+              id="year-filter"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/40"
+            >
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year === 'all' ? 'Tümü' : year}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
       

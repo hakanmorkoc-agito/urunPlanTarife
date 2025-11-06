@@ -3,11 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Search, Edit2, Copy, Trash2 } from 'lucide-react'
 import ProductDefinitionModal from '../components/ProductDefinitionModal'
+import APilotModal from '../components/APilotModal'
 
 const ProductTariffDefinitions = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [showModal, setShowModal] = useState(false)
+  const [showAPilotModal, setShowAPilotModal] = useState(false)
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [hoveredProductId, setHoveredProductId] = useState(null)
@@ -156,7 +158,65 @@ const ProductTariffDefinitions = () => {
       return
     }
 
+    if (method === 'ai') {
+      setShowAPilotModal(true)
+      return
+    }
+
     alert('Bu özellik henüz geliştirme aşamasında.')
+  }
+
+  const handleAPilotSave = async (description) => {
+    try {
+      // A-pilot ile plan oluşturma
+      // Şimdilik basit bir plan oluşturuyoruz, gerçek AI entegrasyonu sonra eklenecek
+      const newPlan = {
+        brans: 'Bireysel Emeklilik',
+        ulke: 'Türkiye',
+        dil: 'Türkçe',
+        plan_kodu: `AI-PLAN-${Date.now()}`,
+        plan_versiyon_no: '1',
+        plan_kisa_adi: 'A-Pilot Oluşturulan Plan',
+        plan_uzun_adi: description.substring(0, 100) || 'A-Pilot ile oluşturulan plan',
+        durum: 'Draft'
+      }
+
+      if (supabase) {
+        // Önce product_tariff_plans'a kayıt
+        const { data: productTariffPlan, error: productError } = await supabase
+          .from('product_tariff_plans')
+          .insert([{
+            ulke: newPlan.ulke,
+            dil: newPlan.dil,
+            brans: newPlan.brans,
+            durum: newPlan.durum,
+            urun_kodu: newPlan.plan_kodu,
+            urun_adi: newPlan.plan_kisa_adi,
+            urun_uzun_adi: newPlan.plan_uzun_adi
+          }])
+          .select()
+          .single()
+
+        if (productError) throw productError
+
+        // Sonra plans'a kayıt
+        const { error: planError } = await supabase
+          .from('plans')
+          .insert([{
+            ...newPlan,
+            product_tariff_plan_id: productTariffPlan.id
+          }])
+
+        if (planError) throw planError
+      }
+
+      // Liste sayfasını yenile
+      fetchProducts()
+      alert('A-Pilot planı başarıyla oluşturuldu!')
+    } catch (error) {
+      console.error('A-Pilot plan oluşturma hatası:', error)
+      alert('Plan oluşturulurken bir hata oluştu.')
+    }
   }
 
   const handleProductSelect = (method, data) => {
@@ -267,9 +327,83 @@ const ProductTariffDefinitions = () => {
     }
   }
 
-  const handleEditProduct = (event, productId) => {
+  const handleEditProduct = async (event, productId) => {
     event.stopPropagation()
-    navigate(`/plan-tanimi/${productId}`)
+    
+    try {
+      // Mevcut plan bilgilerini al
+      let planData = null
+      
+      if (supabase) {
+        // Önce product_tariff_plans'tan bilgileri al
+        const { data: productData, error: productError } = await supabase
+          .from('product_tariff_plans')
+          .select('*')
+          .eq('id', productId)
+          .single()
+
+        if (productError) throw productError
+
+        // Sonra plans tablosundan ilgili planı bul
+        const { data: plansData, error: plansError } = await supabase
+          .from('plans')
+          .select('*')
+          .eq('product_tariff_plan_id', productId)
+          .order('plan_versiyon_no', { ascending: false })
+          .limit(1)
+          .single()
+
+        if (!plansError && plansData) {
+          planData = {
+            ...plansData,
+            // Versiyon no'yu bir artır
+            plan_versiyon_no: String(Number(plansData.plan_versiyon_no || '0') + 1)
+          }
+        } else {
+          // Plans tablosunda kayıt yoksa, product_tariff_plans'tan oluştur
+          planData = {
+            brans: productData.brans,
+            ulke: productData.ulke,
+            dil: productData.dil,
+            plan_kodu: productData.urun_kodu,
+            plan_versiyon_no: '1',
+            plan_kisa_adi: productData.urun_adi,
+            plan_uzun_adi: productData.urun_uzun_adi,
+            durum: productData.durum
+          }
+        }
+      } else {
+        // Fallback: Demo data
+        const product = products.find(p => p.id === productId)
+        if (product) {
+          planData = {
+            brans: product.brans,
+            ulke: product.ulke,
+            dil: product.dil,
+            plan_kodu: product.urun_kodu,
+            plan_versiyon_no: '1',
+            plan_kisa_adi: product.urun_adi,
+            plan_uzun_adi: product.urun_uzun_adi,
+            durum: product.durum
+          }
+        }
+      }
+
+      if (planData) {
+        navigate('/plan-tanimi', {
+          state: {
+            initialSelections: planData,
+            isEdit: true,
+            originalProductId: productId
+          }
+        })
+      } else {
+        navigate(`/plan-tanimi/${productId}`)
+      }
+    } catch (error) {
+      console.error('Plan bilgileri alınırken hata:', error)
+      navigate(`/plan-tanimi/${productId}`)
+    }
   }
 
   const handleDuplicateProduct = async (event, product) => {
@@ -632,6 +766,13 @@ const ProductTariffDefinitions = () => {
             setPendingMethod(null)
           }}
           onSelect={handleProductSelect}
+        />
+      )}
+
+      {showAPilotModal && (
+        <APilotModal
+          onClose={() => setShowAPilotModal(false)}
+          onSave={handleAPilotSave}
         />
       )}
     </div>

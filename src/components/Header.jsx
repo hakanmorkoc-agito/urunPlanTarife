@@ -2,8 +2,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Home,
   X,
-  PieChart,
-  BarChart3,
   Building2,
   Flag,
   Bell,
@@ -11,12 +9,10 @@ import {
   Maximize2,
   ChevronDown
 } from 'lucide-react'
-import { useDashboardView } from '../context/DashboardViewContext'
 
 const Header = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { chartType, setChartType } = useDashboardView()
 
   const getBreadcrumb = () => {
     if (location.pathname === '/dashboard' || location.pathname === '/') {
@@ -47,33 +43,6 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Chart Type Selector */}
-        {(location.pathname === '/dashboard' || location.pathname === '/') && (
-          <div className="flex items-center gap-1 rounded-full border border-gray-100 bg-white px-1.5 py-1 shadow-sm">
-            <button
-              onClick={() => setChartType('donut')}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
-                chartType === 'donut'
-                  ? 'bg-[#8746FA] text-white shadow'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <PieChart className="h-3.5 w-3.5" />
-              <span>Pasta Dilim</span>
-            </button>
-            <button
-              onClick={() => setChartType('column')}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
-                chartType === 'column'
-                  ? 'bg-[#8746FA] text-white shadow'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <BarChart3 className="h-3.5 w-3.5" />
-              <span>Kolon</span>
-            </button>
-          </div>
-        )}
 
         <div className="flex items-center gap-2 text-[10px]">
           <div className="flex items-center gap-1.5 rounded-full border border-white/60 bg-white px-3 py-1 shadow-sm">

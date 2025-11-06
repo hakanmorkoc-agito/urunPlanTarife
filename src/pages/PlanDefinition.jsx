@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { X, Info } from 'lucide-react'
+import { X, Info, Save, ChevronsRight } from 'lucide-react'
 
 const PlanDefinition = () => {
   const { id } = useParams()
@@ -469,7 +469,7 @@ const PlanDefinition = () => {
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex items-center justify-between mt-6 pt-6 border-t">
+        <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t">
           <button
             onClick={() => currentStep > 1 && setCurrentStep(currentStep - 1)}
             disabled={currentStep === 1}
@@ -481,25 +481,25 @@ const PlanDefinition = () => {
           >
             Önceki
           </button>
-          <div className="flex space-x-2">
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 rounded-lg bg-[#1A72FB] text-white font-medium shadow-sm transition-colors hover:bg-[#155ED5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A72FB]"
-            >
-              Kaydet
-            </button>
-            <button
-              onClick={() => currentStep < steps.length && setCurrentStep(currentStep + 1)}
-              disabled={currentStep === steps.length}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${
-                currentStep === steps.length
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-[#1A72FB] text-white shadow-sm hover:bg-[#155ED5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A72FB]'
-              }`}
-            >
-              Sonraki
-            </button>
-          </div>
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#1A72FB] text-white font-semibold shadow-sm transition-colors hover:bg-[#155ED5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A72FB]"
+          >
+            <Save className="w-4 h-4" />
+            <span>Kaydet</span>
+          </button>
+          <button
+            onClick={() => currentStep < steps.length && setCurrentStep(currentStep + 1)}
+            disabled={currentStep === steps.length}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${
+              currentStep === steps.length
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-[#1A72FB] text-white shadow-sm hover:bg-[#155ED5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A72FB]'
+            }`}
+          >
+            <ChevronsRight className="w-4 h-4" />
+            <span>Sonraki</span>
+          </button>
         </div>
       </div>
     </div>
