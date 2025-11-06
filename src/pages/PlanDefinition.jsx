@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { X, Info, Save, ChevronsRight, ChevronDown } from 'lucide-react'
+import { X, Info, Save, ChevronsRight, ChevronsLeft, ChevronDown } from 'lucide-react'
 
 const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
   const [currentStep, setCurrentStep] = useState(1)
@@ -9,6 +9,7 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
     basvuru_tipi: false,
     zimmet_tipi: false
   })
+  const stepperRef = useRef(null)
   const [formData, setFormData] = useState({
     // Genel Bilgiler
     brans: 'Bireysel Emeklilik',
@@ -42,6 +43,101 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
     vakif_uye_kurumu: '',
     hedef_kitle_aciklamasi: ''
   })
+
+  // Aktif adım değiştiğinde otomatik scroll - sağa ve sola doğru en az 2 adım görünsün
+  useEffect(() => {
+    if (stepperRef.current) {
+      const activeStep = stepperRef.current.querySelector(`[data-step="${currentStep}"]`)
+      if (activeStep) {
+        // Kısa bir gecikme ile scroll yap (DOM güncellemesi için)
+        setTimeout(() => {
+          const containerRect = stepperRef.current.getBoundingClientRect()
+          const stepRect = activeStep.getBoundingClientRect()
+          // Her adım ~96px = 24*4
+          const stepWidth = 96
+          const requiredSpace = stepWidth * 2
+          
+          // Sağa doğru kontrol - aktif adımın sağ kenarından container'ın sağ kenarına kadar olan mesafe
+          const distanceToRightEdge = containerRect.right - stepRect.right
+          if (distanceToRightEdge < requiredSpace) {
+            // Sağa scroll yap
+            const additionalScroll = requiredSpace - distanceToRightEdge
+            const newScrollLeft = stepperRef.current.scrollLeft + additionalScroll
+            stepperRef.current.scrollTo({ left: newScrollLeft, behavior: 'smooth' })
+            return
+          }
+          
+          // Sola doğru kontrol - aktif adımın sol kenarından container'ın sol kenarına kadar olan mesafe
+          const distanceToLeftEdge = stepRect.left - containerRect.left
+          if (distanceToLeftEdge < requiredSpace) {
+            // Sola scroll yap
+            const additionalScroll = requiredSpace - distanceToLeftEdge
+            const newScrollLeft = Math.max(0, stepperRef.current.scrollLeft - additionalScroll)
+            stepperRef.current.scrollTo({ left: newScrollLeft, behavior: 'smooth' })
+          }
+        }, 50)
+      }
+    }
+  }, [currentStep])
+
+  // Steps tanımı - useEffect'lerden önce olmalı
+  const steps = [
+    { number: 1, title: 'Genel Bilgiler' },
+    { number: 2, title: 'Ödeme Bilgileri' },
+    { number: 3, title: 'Plan Fon Bilgileri' },
+    { number: 4, title: 'Giriş Aidatı Bilgileri' },
+    { number: 5, title: 'Önerilen Fon Karmaları' },
+    { number: 6, title: 'Kesinti Tanımları' },
+    { number: 7, title: 'Katılı Payı Bilgi' },
+    { number: 8, title: 'Katkı Payı Artış Tipleri' },
+    { number: 9, title: 'Ek Fayda Tanımları' },
+    { number: 10, title: 'Aracı Komisyon Tanımları' },
+    { number: 11, title: 'Satış Kanalı Tanımları' },
+    { number: 12, title: 'Planda Yapılabilecek Zeyiller' },
+    { number: 13, title: 'İstisna Planlar' },
+    { number: 14, title: 'Çevre Sistemler' },
+    { number: 15, title: 'Notlar' },
+    { number: 16, title: 'Pazarlama Materyalleri' },
+    { number: 17, title: 'Grup Parametreler' },
+    { number: 18, title: 'EGP Parametreleri', condition: () => formData.sozlesme_tipi === 'Emeklilik Gelir Planı(EGP)' }
+  ]
+
+  // Scroll ile stepper ilerleme
+  useEffect(() => {
+    const stepperElement = stepperRef.current
+    if (!stepperElement) return
+
+    const handleWheel = (e) => {
+      // Yatay scroll kontrolü
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault()
+        stepperElement.scrollLeft += e.deltaX
+      } else {
+        // Dikey scroll ile adım değiştirme
+        const filteredSteps = steps.filter(step => !step.condition || step.condition())
+        const maxStep = filteredSteps.length
+        
+        if (e.deltaY > 0 && currentStep < maxStep) {
+          // Aşağı scroll - ileri
+          const currentIndex = filteredSteps.findIndex(step => step.number === currentStep)
+          if (currentIndex < filteredSteps.length - 1) {
+            setCurrentStep(filteredSteps[currentIndex + 1].number)
+          }
+        } else if (e.deltaY < 0 && currentStep > 1) {
+          // Yukarı scroll - geri
+          const currentIndex = filteredSteps.findIndex(step => step.number === currentStep)
+          if (currentIndex > 0) {
+            setCurrentStep(filteredSteps[currentIndex - 1].number)
+          }
+        }
+      }
+    }
+
+    stepperElement.addEventListener('wheel', handleWheel, { passive: false })
+    return () => {
+      stepperElement.removeEventListener('wheel', handleWheel)
+    }
+  }, [currentStep, formData.sozlesme_tipi])
 
   useEffect(() => {
     if (initialData) {
@@ -104,16 +200,6 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
       console.error('Error fetching plan data:', error)
     }
   }
-
-  const steps = [
-    { number: 1, title: 'Genel Bilgiler' },
-    { number: 2, title: 'Ödeme Bilgileri' },
-    { number: 3, title: 'Plan Fon Bilgileri' },
-    { number: 4, title: 'Giriş Aidatı Bilgileri' },
-    { number: 5, title: 'Önerilen Fon Karmaları' },
-    { number: 6, title: 'Kesinti Tanımları' },
-    { number: 7, title: 'Katılı Payı Bilgi' }
-  ]
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -302,8 +388,11 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
       }
 
       alert('Plan başarıyla kaydedildi!')
-      // Liste sayfasına yönlendir ve refresh parametresi ekle
-      navigate('/urun-tarife-tanimlari?refresh=' + Date.now())
+      // Başarılı kayıt sonrası modalı kapat
+      if (onSave) {
+        onSave()
+      }
+      onClose()
     } catch (error) {
       console.error('Error saving plan:', error)
       alert(`Kayıt sırasında bir hata oluştu: ${error.message}`)
@@ -330,44 +419,58 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
         <div className="flex-1 overflow-y-auto p-6">
           {/* Step Navigation */}
           <div className="mb-6">
-            <div className="flex items-center space-x-4 overflow-x-auto pb-2">
-          {steps.map((step, index) => {
-            const isActive = currentStep === step.number
-            const isCompleted = step.number < currentStep
-            const isLast = index === steps.length - 1
+            <div className="relative">
+              <div 
+                ref={stepperRef}
+                className="flex items-center space-x-0 overflow-x-auto pb-2 scrollbar-hide"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {steps.filter(step => !step.condition || step.condition()).map((step, index, filteredSteps) => {
+                  const isActive = currentStep === step.number
+                  const isCompleted = step.number < currentStep
+                  const isLast = index === filteredSteps.length - 1
+                  const isEnabled = !step.condition || step.condition()
 
-            return (
-              <div key={step.number} className="flex items-center">
-                <button
-                  onClick={() => setCurrentStep(step.number)}
-                  className={`flex flex-col items-center w-24 transition-colors ${
-                    isActive ? 'text-[#8746FA]' : 'text-gray-400'
-                  }`}
-                >
-                  <span
-                    className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold border ${
-                      isActive
-                        ? 'bg-[#8746FA] text-white border-[#8746FA] shadow'
-                        : isCompleted
-                          ? 'bg-[#8746FA]/10 text-[#8746FA] border-[#8746FA]' 
-                          : 'bg-white border-gray-300'
-                    }`}
-                  >
-                    {step.number}
-                  </span>
-                  <span className={`mt-2 text-xs font-medium ${isActive ? 'text-[#8746FA]' : 'text-gray-500'}`}>
-                    {step.title}
-                  </span>
-                </button>
+                  return (
+                    <div key={step.number} className="flex items-start flex-shrink-0" data-step={step.number}>
+                      <div className="flex flex-col items-center w-24">
+                        <div className="h-8 flex items-center justify-center mb-3">
+                          <button
+                            onClick={() => isEnabled && setCurrentStep(step.number)}
+                            disabled={!isEnabled}
+                            className={`group relative w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold border transition-all duration-200 flex-shrink-0 ${
+                              isActive
+                                ? 'bg-[#8746FA] text-white border-[#8746FA] shadow-lg scale-110'
+                                : isCompleted
+                                  ? 'bg-[#8746FA]/10 text-[#8746FA] border-[#8746FA] group-hover:scale-110 group-hover:shadow-md' 
+                                  : isEnabled
+                                    ? 'bg-white border-gray-300 group-hover:border-[#8746FA] group-hover:bg-[#8746FA]/5 group-hover:scale-110'
+                                    : 'bg-gray-100 border-gray-200'
+                            } ${isEnabled ? 'hover:scale-110 hover:z-20 cursor-pointer' : 'cursor-not-allowed'}`}
+                          >
+                            {step.number}
+                          </button>
+                        </div>
+                        <span className={`text-xs font-medium text-center leading-tight min-h-[2.5rem] flex items-start justify-center ${isActive ? 'text-[#8746FA]' : isEnabled ? 'text-gray-500' : 'text-gray-400'}`}>
+                          {step.title}
+                        </span>
+                      </div>
 
-                {!isLast && (
-                  <div className={`w-12 h-px mx-2 ${isCompleted ? 'bg-[#8746FA]' : 'bg-gray-300'}`} />
-                )}
+                      {!isLast && (
+                        <div className="flex items-center justify-center w-12 h-8 flex-shrink-0" style={{ marginTop: '16px' }}>
+                          <div 
+                            className={`w-full h-0.5 transition-colors ${
+                              isCompleted ? 'bg-[#8746FA]' : 'bg-gray-300'
+                            }`}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
-        </div>
-      </div>
+            </div>
+          </div>
 
       {/* Form Content */}
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -909,42 +1012,39 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
-          >
-            Vazgeç
-          </button>
-          <button
-            onClick={() => currentStep > 1 && setCurrentStep(currentStep - 1)}
-            disabled={currentStep === 1}
-            className={`px-4 py-2 rounded-lg ${
-              currentStep === 1
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Önceki
-          </button>
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => currentStep > 1 && setCurrentStep(currentStep - 1)}
+              disabled={currentStep === 1}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${
+                currentStep === 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-[#1A72FB] text-white shadow-sm hover:bg-[#155ED5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A72FB]'
+              }`}
+            >
+              <ChevronsLeft className="w-4 h-4" />
+              <span>Geri</span>
+            </button>
+            <button
+              onClick={() => currentStep < steps.length && setCurrentStep(currentStep + 1)}
+              disabled={currentStep === steps.length}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${
+                currentStep === steps.length
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-[#1A72FB] text-white shadow-sm hover:bg-[#155ED5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A72FB]'
+              }`}
+            >
+              <span>İleri</span>
+              <ChevronsRight className="w-4 h-4" />
+            </button>
+          </div>
           <button
             onClick={handleSave}
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#1A72FB] text-white font-semibold shadow-sm transition-colors hover:bg-[#155ED5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A72FB]"
           >
             <Save className="w-4 h-4" />
-            <span>Kaydet</span>
-          </button>
-          <button
-            onClick={() => currentStep < steps.length && setCurrentStep(currentStep + 1)}
-            disabled={currentStep === steps.length}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${
-              currentStep === steps.length
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-[#1A72FB] text-white shadow-sm hover:bg-[#155ED5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A72FB]'
-            }`}
-          >
-            <ChevronsRight className="w-4 h-4" />
-            <span>Sonraki</span>
+            <span>Kaydet Kapat</span>
           </button>
         </div>
       </div>

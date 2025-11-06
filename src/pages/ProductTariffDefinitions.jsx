@@ -29,6 +29,8 @@ const ProductTariffDefinitions = () => {
     gecerlilik_baslangic_tarihi: '',
     gecerlilik_bitis_tarihi: ''
   })
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
   const filterInputRef = useRef(null)
 
   useEffect(() => {
@@ -262,6 +264,63 @@ const ProductTariffDefinitions = () => {
       return String(productValue || '').toLowerCase().includes(filterValue.toLowerCase())
     })
   })
+
+  // Pagination hesaplamaları
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage))
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex)
+  
+  // Sayfa numarasını toplam sayfa sayısına göre sınırla
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages)
+    }
+  }, [totalPages, currentPage])
+
+  // Sayfa numaralarını hesapla
+  const getPageNumbers = () => {
+    const pages = []
+    if (totalPages <= 7) {
+      // 7 veya daha az sayfa varsa hepsini göster
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      // İlk sayfalar
+      if (currentPage <= 4) {
+        for (let i = 1; i <= 5; i++) {
+          pages.push(i)
+        }
+        pages.push('ellipsis')
+        pages.push(totalPages)
+      }
+      // Ortadaki sayfalar
+      else if (currentPage >= totalPages - 3) {
+        pages.push(1)
+        pages.push('ellipsis')
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i)
+        }
+      }
+      // Diğer durumlar
+      else {
+        pages.push(1)
+        pages.push('ellipsis')
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i)
+        }
+        pages.push('ellipsis')
+        pages.push(totalPages)
+      }
+    }
+    return pages
+  }
+
+  useEffect(() => {
+    // Filtre değiştiğinde ilk sayfaya dön
+    setCurrentPage(1)
+  }, [searchFilters])
 
   const openFilter = (column, event) => {
     if (column.key === 'actions') return
@@ -586,7 +645,7 @@ const ProductTariffDefinitions = () => {
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((product) => {
+                paginatedProducts.map((product) => {
                   const isHovered = hoveredProductId === product.id
                   return (
                     <tr
@@ -698,37 +757,78 @@ const ProductTariffDefinitions = () => {
           </span>
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-1">
-              <button className="rounded px-2 py-1 text-gray-500 hover:bg-gray-200" aria-label="Önceki sayfa">‹</button>
-              {[1, 2, 3, 4, 5].map((page) => (
-                <button
-                  key={page}
-                  className={`rounded px-2.5 py-1 text-xs ${
-                    page === 1
-                      ? 'bg-blue-600 font-semibold text-white shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-              <span className="px-1">…</span>
-              <button className="rounded px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-200">27</button>
-              <button className="rounded px-2 py-1 text-gray-500 hover:bg-gray-200" aria-label="Sonraki sayfa">›</button>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className={`rounded px-2 py-1 text-gray-500 hover:bg-gray-200 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                aria-label="Önceki sayfa"
+              >
+                ‹
+              </button>
+              {getPageNumbers().map((page, index) => {
+                if (page === 'ellipsis') {
+                  return <span key={`ellipsis-${index}`} className="px-1">…</span>
+                }
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`rounded px-2.5 py-1 text-xs ${
+                      page === currentPage
+                        ? 'bg-blue-600 font-semibold text-white shadow-sm'
+                        : 'text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              })}
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className={`rounded px-2 py-1 text-gray-500 hover:bg-gray-200 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                aria-label="Sonraki sayfa"
+              >
+                ›
+              </button>
             </div>
             <div className="flex items-center gap-2">
-               <select className="h-8 rounded-md border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:ring-blue-500">
-                <option>10 / sayfa</option>
-                <option>20 / sayfa</option>
-                <option>50 / sayfa</option>
+              <select 
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value))
+                  setCurrentPage(1)
+                }}
+                className="h-8 rounded-md border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value={10}>10 / sayfa</option>
+                <option value={20}>20 / sayfa</option>
+                <option value={50}>50 / sayfa</option>
               </select>
               <div className="flex items-center">
                 <input
                   type="number"
                   min="1"
+                  max={totalPages}
+                  value={currentPage}
+                  onChange={(e) => {
+                    const page = Math.max(1, Math.min(totalPages, Number(e.target.value) || 1))
+                    setCurrentPage(page)
+                  }}
                   className="h-8 w-16 rounded-l-md border border-r-0 border-gray-300 px-2 text-center text-xs focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                   placeholder="Sayfa"
                 />
-                <button className="h-8 rounded-r-md bg-gray-200 px-3 text-xs font-semibold text-gray-700 hover:bg-gray-300" type="button">
+                <button 
+                  onClick={() => {
+                    const input = document.querySelector('input[type="number"][placeholder="Sayfa"]')
+                    if (input) {
+                      const page = Math.max(1, Math.min(totalPages, Number(input.value) || 1))
+                      setCurrentPage(page)
+                    }
+                  }}
+                  className="h-8 rounded-r-md bg-gray-200 px-3 text-xs font-semibold text-gray-700 hover:bg-gray-300" 
+                  type="button"
+                >
                   Git
                 </button>
               </div>

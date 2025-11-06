@@ -1,19 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  Search,
-  SlidersHorizontal,
-  Layers,
-  Wallet,
-  Workflow,
-  ServerCog,
-  Settings2,
-  Users,
-  Send,
-  Briefcase,
-  Cog,
-  AppWindow
-} from 'lucide-react'
+  SearchOutlined,
+  SettingOutlined,
+  AppstoreOutlined,
+  WalletOutlined,
+  ApartmentOutlined,
+  DatabaseOutlined,
+  ControlOutlined,
+  UserOutlined,
+  SendOutlined,
+  FolderOutlined,
+  ToolOutlined,
+  AppstoreAddOutlined
+} from '@ant-design/icons'
 
 const Sidebar = () => {
   const navigate = useNavigate()
@@ -23,11 +23,11 @@ const Sidebar = () => {
   const submenuRef = useRef(null)
 
   const menuItems = [
-    { id: 'search', icon: Search, label: 'Arama Yap' },
-    { id: 'parameters', icon: SlidersHorizontal, label: 'Parametreler' },
+    { id: 'search', icon: SearchOutlined, label: 'Arama Yap' },
+    { id: 'parameters', icon: SettingOutlined, label: 'Parametreler' },
     {
       id: 'product-tariff',
-      icon: Layers,
+      icon: AppstoreOutlined,
       path: '/urun-tarife-tanimlari',
       label: 'Ürün Tarife Plan Tanımları',
       active: true,
@@ -43,15 +43,15 @@ const Sidebar = () => {
         { label: 'Fon Tanımları', path: '/urun-tarife-tanimlari' }
       ]
     },
-    { id: 'finance', icon: Wallet, label: 'Finans' },
-    { id: 'workflow', icon: Workflow, label: 'İş Akışı' },
-    { id: 'background', icon: ServerCog, label: 'Arka Plan İşlemleri' },
-    { id: 'rules', icon: Settings2, label: 'Kural İşlemleri' },
-    { id: 'customer', icon: Users, label: 'Müşteri İşlemleri' },
-    { id: 'delivery', icon: Send, label: 'Gönderi' },
-    { id: 'pool', icon: Briefcase, label: 'İş Havuzu' },
-    { id: 'system', icon: Cog, label: 'Kullanıcı ve Sistem Ayarları' },
-    { id: 'l4u', icon: AppWindow, label: 'L4U Uygulama Menüsü' }
+    { id: 'finance', icon: WalletOutlined, label: 'Finans' },
+    { id: 'workflow', icon: ApartmentOutlined, label: 'İş Akışı' },
+    { id: 'background', icon: DatabaseOutlined, label: 'Arka Plan İşlemleri' },
+    { id: 'rules', icon: ControlOutlined, label: 'Kural İşlemleri' },
+    { id: 'customer', icon: UserOutlined, label: 'Müşteri İşlemleri' },
+    { id: 'delivery', icon: SendOutlined, label: 'Gönderi' },
+    { id: 'pool', icon: FolderOutlined, label: 'İş Havuzu' },
+    { id: 'system', icon: ToolOutlined, label: 'Kullanıcı ve Sistem Ayarları' },
+    { id: 'l4u', icon: AppstoreAddOutlined, label: 'L4U Uygulama Menüsü' }
   ]
 
   const isItemActive = (itemPath, active) => {
@@ -143,7 +143,7 @@ const Sidebar = () => {
                 }`}
                 aria-label={item.label}
               >
-                <Icon className="h-4 w-4" strokeWidth={1.8} />
+                <Icon style={{ fontSize: '16px' }} />
               </button>
             )
           })}
