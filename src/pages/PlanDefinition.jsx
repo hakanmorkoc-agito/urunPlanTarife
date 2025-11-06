@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { X, Info, Save, ChevronsRight, ChevronsLeft, ChevronDown } from 'lucide-react'
+import FloatingLabelInput from '../components/FloatingLabelInput'
+import FloatingLabelSelect from '../components/FloatingLabelSelect'
+import FloatingLabelMultiSelect from '../components/FloatingLabelMultiSelect'
 
 const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
   const [currentStep, setCurrentStep] = useState(1)
   const [originalPlanId, setOriginalPlanId] = useState(null)
-  const [openDropdowns, setOpenDropdowns] = useState({
-    basvuru_tipi: false,
-    zimmet_tipi: false
-  })
   const stepperRef = useRef(null)
   const [formData, setFormData] = useState({
     // Genel Bilgiler
@@ -223,36 +222,10 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
   const isZimmetTipiEnabled = formData.basvuru_tipi.includes('Matbu')
   const isGecerliSozlesmeCinsiEnabled = formData.sozlesme_tipi === 'Grup'
 
-  // Dropdown dışına tıklanınca kapat
+  // Refs for multi-select components
   const basvuruTipiRef = useRef(null)
   const zimmetTipiRef = useRef(null)
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (basvuruTipiRef.current && !basvuruTipiRef.current.contains(event.target)) {
-        setOpenDropdowns(prev => ({ ...prev, basvuru_tipi: false }))
-      }
-      if (zimmetTipiRef.current && !zimmetTipiRef.current.contains(event.target)) {
-        setOpenDropdowns(prev => ({ ...prev, zimmet_tipi: false }))
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-
-  const toggleDropdown = (field) => {
-    setOpenDropdowns(prev => ({ ...prev, [field]: !prev[field] }))
-  }
-
-  const getSelectedText = (field, options) => {
-    const selected = formData[field] || []
-    if (selected.length === 0) return 'Seçiniz'
-    if (selected.length <= 2) return selected.join(', ')
-    return `${selected.length} seçili`
-  }
 
   const handleSave = async () => {
     if (!supabase) {
@@ -530,179 +503,97 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
             <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Plan Tipi-Adı</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sözleşme Tipi <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.sozlesme_tipi}
-                    onChange={(e) => handleInputChange('sozlesme_tipi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  >
-                    <option value="">Seçiniz</option>
-                    <option value="Ferdi">Ferdi</option>
-                    <option value="Grup">Grup</option>
-                    <option value="Otomatik Katılım (OKS)">Otomatik Katılım (OKS)</option>
-                    <option value="Emeklilik Gelir Planı(EGP)">Emeklilik Gelir Planı(EGP)</option>
-                  </select>
-                </div>
+                <FloatingLabelSelect
+                  label="Sözleşme Tipi"
+                  value={formData.sozlesme_tipi}
+                  onChange={(e) => handleInputChange('sozlesme_tipi', e.target.value)}
+                  required
+                >
+                  <option value="Ferdi">Ferdi</option>
+                  <option value="Grup">Grup</option>
+                  <option value="Otomatik Katılım (OKS)">Otomatik Katılım (OKS)</option>
+                  <option value="Emeklilik Gelir Planı(EGP)">Emeklilik Gelir Planı(EGP)</option>
+                </FloatingLabelSelect>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Plan Kodu <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.plan_kodu}
-                    onChange={(e) => handleInputChange('plan_kodu', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
+                <FloatingLabelInput
+                  label="Plan Kodu"
+                  value={formData.plan_kodu}
+                  onChange={(e) => handleInputChange('plan_kodu', e.target.value)}
+                  required
+                />
+
+                <div className="relative">
+                  <FloatingLabelInput
+                    label="Plan Versiyon No"
+                    value={formData.plan_versiyon_no}
+                    onChange={(e) => handleInputChange('plan_versiyon_no', e.target.value)}
                     required
+                    disabled
                   />
+                  <Info className="absolute right-3 w-4 h-4 text-gray-400 pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }} />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Plan Versiyon No <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.plan_versiyon_no}
-                      onChange={(e) => handleInputChange('plan_versiyon_no', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
-                      disabled
-                      required
-                    />
-                    <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
-                  </div>
-                </div>
+                <FloatingLabelInput
+                  label="Plan Kısa Adı"
+                  value={formData.plan_kisa_adi}
+                  onChange={(e) => handleInputChange('plan_kisa_adi', e.target.value)}
+                  required
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Plan Kısa Adı <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.plan_kisa_adi}
-                    onChange={(e) => handleInputChange('plan_kisa_adi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
+                <FloatingLabelInput
+                  label="Plan Uzun Adı"
+                  value={formData.plan_uzun_adi}
+                  onChange={(e) => handleInputChange('plan_uzun_adi', e.target.value)}
+                  required
+                />
+
+                <FloatingLabelMultiSelect
+                  ref={basvuruTipiRef}
+                  label="Başvuru Tipi"
+                  value={formData.basvuru_tipi}
+                  onChange={(newValue) => handleInputChange('basvuru_tipi', newValue)}
+                  options={['Online', 'Offline', 'Matbu']}
+                  required
+                  getSelectedText={(selected, options) => {
+                    if (selected.length === 0) return ''
+                    if (selected.length <= 2) return selected.join(', ')
+                    return `${selected.length} seçili`
+                  }}
+                />
+
+                <FloatingLabelInput
+                  label="Kategori Kodu"
+                  value={formData.kategori_kodu}
+                  onChange={(e) => handleInputChange('kategori_kodu', e.target.value)}
+                  required
+                />
+
+                <div className="relative">
+                  <FloatingLabelMultiSelect
+                    ref={zimmetTipiRef}
+                    label="Zimmet Tipi"
+                    value={formData.zimmet_tipi}
+                    onChange={(newValue) => handleInputChange('zimmet_tipi', newValue)}
+                    options={['Zimmet Tipi 1', 'Zimmet Tipi 2', 'Zimmet Tipi 3'].map(opt => ({
+                      label: opt,
+                      value: opt.replace('Zimmet Tipi ', 'Zimmet')
+                    }))}
+                    disabled={!isZimmetTipiEnabled}
+                    getSelectedText={(selected) => {
+                      if (selected.length === 0) return ''
+                      return selected.map(v => `Zimmet Tipi ${v.replace('Zimmet', '')}`).join(', ')
+                    }}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Plan Uzun Adı <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.plan_uzun_adi}
-                    onChange={(e) => handleInputChange('plan_uzun_adi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Başvuru Tipi <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative" ref={basvuruTipiRef}>
-                    <button
-                      type="button"
-                      onClick={() => toggleDropdown('basvuru_tipi')}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    >
-                      <span className={formData.basvuru_tipi.length === 0 ? 'text-gray-400' : 'text-gray-700'}>
-                        {getSelectedText('basvuru_tipi', ['Online', 'Offline', 'Matbu'])}
-                      </span>
-                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${openDropdowns.basvuru_tipi ? 'rotate-180' : ''}`} />
-                    </button>
-                    {openDropdowns.basvuru_tipi && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
-                        {['Online', 'Offline', 'Matbu'].map((option) => (
-                          <label key={option} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={formData.basvuru_tipi.includes(option)}
-                              onChange={() => handleMultiSelectChange('basvuru_tipi', option)}
-                              className="w-4 h-4 text-[#8746FA] border-gray-300 rounded focus:ring-[#8746FA]"
-                            />
-                            <span className="text-sm text-gray-700">{option}</span>
-                          </label>
-                        ))}
+                  {!isZimmetTipiEnabled && (
+                    <div className="absolute right-3 group" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+                      <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                      <div className="absolute right-0 top-6 hidden group-hover:block z-10">
+                        <div className="bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap shadow-lg">
+                          Zimmet tipi Matbu seçili olmalıdır
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kategori Kodu <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.kategori_kodu}
-                    onChange={(e) => handleInputChange('kategori_kodu', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Zimmet Tipi
-                  </label>
-                  <div className="relative" ref={zimmetTipiRef}>
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => isZimmetTipiEnabled && toggleDropdown('zimmet_tipi')}
-                        disabled={!isZimmetTipiEnabled}
-                        className={`w-full px-4 py-2 border border-gray-300 rounded-lg text-left flex items-center justify-between focus:ring-2 focus:ring-[#8746FA]/30 ${
-                          !isZimmetTipiEnabled
-                            ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                            : 'bg-white focus:border-[#8746FA]'
-                        }`}
-                      >
-                        <span className={formData.zimmet_tipi.length === 0 ? 'text-gray-400' : 'text-gray-700'}>
-                          {formData.zimmet_tipi.length === 0 
-                            ? 'Seçiniz' 
-                            : formData.zimmet_tipi.map(v => `Zimmet Tipi ${v.replace('Zimmet', '')}`).join(', ')}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <div className="group relative">
-                            <Info className="w-4 h-4 text-gray-400 cursor-help" />
-                            <div className="absolute right-0 top-6 hidden group-hover:block z-20">
-                              <div className="bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap shadow-lg">
-                                Zimmet tipi Matbu seçili olmalıdır
-                              </div>
-                            </div>
-                          </div>
-                          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${openDropdowns.zimmet_tipi ? 'rotate-180' : ''}`} />
-                        </div>
-                      </button>
-                        {openDropdowns.zimmet_tipi && isZimmetTipiEnabled && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
-                          {['Zimmet Tipi 1', 'Zimmet Tipi 2', 'Zimmet Tipi 3'].map((option) => {
-                            const value = option.replace('Zimmet Tipi ', 'Zimmet')
-                            return (
-                              <label key={value} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={formData.zimmet_tipi.includes(value)}
-                                  onChange={() => handleMultiSelectChange('zimmet_tipi', value)}
-                                  className="w-4 h-4 text-[#8746FA] border-gray-300 rounded focus:ring-[#8746FA]"
-                                />
-                                <span className="text-sm text-gray-700">{option}</span>
-                              </label>
-                            )
-                          })}
-                        </div>
-                      )}
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -711,104 +602,68 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
             <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Plan Tarih-Durum</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Başlangıç Tarihi <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.baslangic_tarihi}
-                    onChange={(e) => handleInputChange('baslangic_tarihi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  />
-                </div>
+                <FloatingLabelInput
+                  label="Başlangıç Tarihi"
+                  type="date"
+                  value={formData.baslangic_tarihi}
+                  onChange={(e) => handleInputChange('baslangic_tarihi', e.target.value)}
+                  required
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bitiş Tarihi <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.bitis_tarihi}
-                    onChange={(e) => handleInputChange('bitis_tarihi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  />
-                </div>
+                <FloatingLabelInput
+                  label="Bitiş Tarihi"
+                  type="date"
+                  value={formData.bitis_tarihi}
+                  onChange={(e) => handleInputChange('bitis_tarihi', e.target.value)}
+                  required
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Durum <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.durum}
-                    onChange={(e) => handleInputChange('durum', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
+                <FloatingLabelSelect
+                  label="Durum"
+                  value={formData.durum}
+                  onChange={(e) => handleInputChange('durum', e.target.value)}
+                  required
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </FloatingLabelSelect>
+
+                <FloatingLabelInput
+                  label="Hazine Plan Kodu"
+                  value={formData.hazine_plan_kodu}
+                  onChange={(e) => handleInputChange('hazine_plan_kodu', e.target.value)}
+                  required
+                />
+
+                <FloatingLabelInput
+                  label="Hazine Tasdik Tarihi"
+                  type="date"
+                  value={formData.hazine_tasdik_tarihi}
+                  onChange={(e) => handleInputChange('hazine_tasdik_tarihi', e.target.value)}
+                  required
+                />
+
+                <div className="relative">
+                  <FloatingLabelSelect
+                    label="Geçerli Sözleşme Cinsi"
+                    value={formData.gecerli_sozlesme_cinsi}
+                    onChange={(e) => handleInputChange('gecerli_sozlesme_cinsi', e.target.value)}
+                    disabled={!isGecerliSozlesmeCinsiEnabled}
                   >
-                    <option value="Draft">Draft</option>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Hazine Plan Kodu <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.hazine_plan_kodu}
-                    onChange={(e) => handleInputChange('hazine_plan_kodu', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Hazine Tasdik Tarihi <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.hazine_tasdik_tarihi}
-                    onChange={(e) => handleInputChange('hazine_tasdik_tarihi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Geçerli Sözleşme Cinsi
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={formData.gecerli_sozlesme_cinsi}
-                      onChange={(e) => handleInputChange('gecerli_sozlesme_cinsi', e.target.value)}
-                      disabled={!isGecerliSozlesmeCinsiEnabled}
-                      className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30 ${
-                        !isGecerliSozlesmeCinsiEnabled 
-                          ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
-                          : 'bg-white'
-                      }`}
-                    >
-                      <option value="">Seçiniz</option>
-                      <option value="İGES">İGES</option>
-                      <option value="GBB">GBB</option>
-                    </select>
-                    <div className="absolute right-3 top-3 group">
-                      <Info className={`w-4 h-4 ${isGecerliSozlesmeCinsiEnabled ? 'text-gray-400' : 'text-gray-400'} cursor-help`} />
-                      {!isGecerliSozlesmeCinsiEnabled && (
-                        <div className="absolute right-0 top-6 hidden group-hover:block z-10">
-                          <div className="bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap shadow-lg">
-                            Sözleşme Tipi alanında Grup seçili olmalıdır
-                          </div>
+                    <option value="İGES">İGES</option>
+                    <option value="GBB">GBB</option>
+                  </FloatingLabelSelect>
+                  {!isGecerliSozlesmeCinsiEnabled && (
+                    <div className="absolute right-3 group" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+                      <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                      <div className="absolute right-0 top-6 hidden group-hover:block z-10">
+                        <div className="bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap shadow-lg">
+                          Sözleşme Tipi alanında Grup seçili olmalıdır
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -817,65 +672,43 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
             <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Finansal ve Müşteri Kriterleri</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kur Tipi <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.kur_tipi}
-                    onChange={(e) => handleInputChange('kur_tipi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  >
-                    <option value="">Seçiniz</option>
-                    <option value="TL">TL</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                  </select>
-                </div>
+                <FloatingLabelSelect
+                  label="Kur Tipi"
+                  value={formData.kur_tipi}
+                  onChange={(e) => handleInputChange('kur_tipi', e.target.value)}
+                  required
+                >
+                  <option value="TL">TL</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </FloatingLabelSelect>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Döviz-Para Cinsleri <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.doviz_para_cinsleri}
-                    onChange={(e) => handleInputChange('doviz_para_cinsleri', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  >
-                    <option value="">Seçiniz</option>
-                    <option value="TL">TL</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                  </select>
-                </div>
+                <FloatingLabelSelect
+                  label="Döviz-Para Cinsleri"
+                  value={formData.doviz_para_cinsleri}
+                  onChange={(e) => handleInputChange('doviz_para_cinsleri', e.target.value)}
+                  required
+                >
+                  <option value="TL">TL</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </FloatingLabelSelect>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Min. Giriş Yaş <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.min_giris_yas}
-                    onChange={(e) => handleInputChange('min_giris_yas', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  />
-                </div>
+                <FloatingLabelInput
+                  label="Min. Giriş Yaş"
+                  type="number"
+                  value={formData.min_giris_yas}
+                  onChange={(e) => handleInputChange('min_giris_yas', e.target.value)}
+                  required
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Max. Giriş Yaş <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.max_giris_yas}
-                    onChange={(e) => handleInputChange('max_giris_yas', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  />
-                </div>
+                <FloatingLabelInput
+                  label="Max. Giriş Yaş"
+                  type="number"
+                  value={formData.max_giris_yas}
+                  onChange={(e) => handleInputChange('max_giris_yas', e.target.value)}
+                  required
+                />
               </div>
             </div>
 
@@ -917,48 +750,30 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
             <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Ek Detaylar</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ek Kategori 1
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.ek_kategori_1}
-                    onChange={(e) => handleInputChange('ek_kategori_1', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
+                <FloatingLabelInput
+                  label="Ek Kategori 1"
+                  value={formData.ek_kategori_1}
+                  onChange={(e) => handleInputChange('ek_kategori_1', e.target.value)}
+                />
+
+                <FloatingLabelInput
+                  label="Ek Kategori 2"
+                  value={formData.ek_kategori_2}
+                  onChange={(e) => handleInputChange('ek_kategori_2', e.target.value)}
+                />
+
+                <div className="relative">
+                  <FloatingLabelInput
+                    label="EGP Ödeme Türleri"
+                    value={formData.egp_odeme_turleri}
+                    onChange={(e) => handleInputChange('egp_odeme_turleri', e.target.value)}
+                    disabled
                   />
+                  <Info className="absolute right-3 w-4 h-4 text-gray-400 pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }} />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ek Kategori 2
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.ek_kategori_2}
-                    onChange={(e) => handleInputChange('ek_kategori_2', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    EGP Ödeme Türleri
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.egp_odeme_turleri}
-                      onChange={(e) => handleInputChange('egp_odeme_turleri', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
-                      disabled
-                    />
-                    <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.vakif_aktarim}
@@ -967,21 +782,14 @@ const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
                     />
                     <span className="text-sm text-gray-700">Vakıf Aktarım mı?</span>
                   </label>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vakıf Üye Kurumu
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
+                  <div className="relative flex-1">
+                    <FloatingLabelInput
+                      label="Vakıf Üye Kurumu"
                       value={formData.vakif_uye_kurumu}
                       onChange={(e) => handleInputChange('vakif_uye_kurumu', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
                       disabled
                     />
-                    <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
+                    <Info className="absolute right-3 w-4 h-4 text-gray-400 pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }} />
                   </div>
                 </div>
 

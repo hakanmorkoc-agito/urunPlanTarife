@@ -29,3 +29,30 @@ body {
   scrollbar-width: none;
 }
 
+/* Date input format gösterimini gizle */
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
+
+input[type="date"]:not(:focus):not(:valid)::-webkit-datetime-edit-text,
+input[type="date"]:not(:focus):not(:valid)::-webkit-datetime-edit-month-field,
+input[type="date"]:not(:focus):not(:valid)::-webkit-datetime-edit-day-field,
+input[type="date"]:not(:focus):not(:valid)::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
+
+input[type="date"]:focus::-webkit-datetime-edit-text,
+input[type="date"]:focus::-webkit-datetime-edit-month-field,
+input[type="date"]:focus::-webkit-datetime-edit-day-field,
+input[type="date"]:focus::-webkit-datetime-edit-year-field {
+  color: #1f2933;
+}
+
+/* Firefox için */
+input[type="date"]:invalid::-moz-placeholder {
+  color: transparent;
+}
+

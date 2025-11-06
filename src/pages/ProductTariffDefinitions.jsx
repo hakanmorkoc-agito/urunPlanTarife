@@ -5,6 +5,8 @@ import { Search, Edit2, Copy, Trash2 } from 'lucide-react'
 import ProductDefinitionModal from '../components/ProductDefinitionModal'
 import APilotModal from '../components/APilotModal'
 import PlanDefinitionModal from './PlanDefinition'
+import FloatingLabelInput from '../components/FloatingLabelInput'
+import FloatingLabelSelect from '../components/FloatingLabelSelect'
 
 const ProductTariffDefinitions = () => {
   const navigate = useNavigate()
@@ -31,6 +33,7 @@ const ProductTariffDefinitions = () => {
   })
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [hoveredMethodCard, setHoveredMethodCard] = useState(null)
   const filterInputRef = useRef(null)
 
   useEffect(() => {
@@ -42,6 +45,13 @@ const ProductTariffDefinitions = () => {
   useEffect(() => {
     fetchProducts()
   }, [])
+
+  // Modal açıldığında alt menüyü kapat
+  useEffect(() => {
+    if (showModal || showAPilotModal || showPlanModal) {
+      window.dispatchEvent(new CustomEvent('closeSubmenu'))
+    }
+  }, [showModal, showAPilotModal, showPlanModal])
 
   // URL'de refresh parametresi varsa listeyi yenile
   useEffect(() => {
@@ -579,18 +589,30 @@ const ProductTariffDefinitions = () => {
               title="Yeni Ürün Tanımla"
               subtitle="Sıfırdan Ürün Oluşturulsun"
               onClick={() => handleMethodAction('new')}
+              onMouseEnter={() => setHoveredMethodCard('new')}
+              onMouseLeave={() => setHoveredMethodCard(null)}
+              isHovered={hoveredMethodCard === 'new'}
+              isOtherHovered={hoveredMethodCard !== null && hoveredMethodCard !== 'new'}
             />
             <MethodCard
               icon="catalog"
               title="Katalogdan Ürün Seç"
               subtitle="Mevcut Katalog Ürünlerinden Şablon olarak seçin"
               onClick={() => handleMethodAction('catalog')}
+              onMouseEnter={() => setHoveredMethodCard('catalog')}
+              onMouseLeave={() => setHoveredMethodCard(null)}
+              isHovered={hoveredMethodCard === 'catalog'}
+              isOtherHovered={hoveredMethodCard !== null && hoveredMethodCard !== 'catalog'}
             />
             <MethodCard
               icon="ai"
               title="A-Pilot Tanımlasın"
               subtitle="Yapay Zeka Sizin İçin Tanımlasın"
               onClick={() => handleMethodAction('ai')}
+              onMouseEnter={() => setHoveredMethodCard('ai')}
+              onMouseLeave={() => setHoveredMethodCard(null)}
+              isHovered={hoveredMethodCard === 'ai'}
+              isOtherHovered={hoveredMethodCard !== null && hoveredMethodCard !== 'ai'}
             />
           </div>
         </div>
@@ -793,18 +815,21 @@ const ProductTariffDefinitions = () => {
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <select 
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value))
-                  setCurrentPage(1)
-                }}
-                className="h-8 rounded-md border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value={10}>10 / sayfa</option>
-                <option value={20}>20 / sayfa</option>
-                <option value={50}>50 / sayfa</option>
-              </select>
+              <div className="w-32">
+                <FloatingLabelSelect
+                  label="Sayfa Başına Kayıt"
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value))
+                    setCurrentPage(1)
+                  }}
+                  className="text-xs"
+                >
+                  <option value={10}>10 / sayfa</option>
+                  <option value={20}>20 / sayfa</option>
+                  <option value={50}>50 / sayfa</option>
+                </FloatingLabelSelect>
+              </div>
               <div className="flex items-center">
                 <input
                   type="number"
@@ -841,16 +866,26 @@ const ProductTariffDefinitions = () => {
             className="fixed z-50 w-60 rounded-xl border border-gray-200 bg-white p-4 shadow-2xl"
             style={{ top: filterPosition.top, left: filterPosition.left }}
           >
-            <p className="text-sm font-semibold text-gray-800">{activeFilter.label}</p>
             <div className="mt-3">
-              <input
-                ref={filterInputRef}
-                type={activeFilter.filterType === 'date' ? 'date' : 'text'}
-                value={activeFilter.value}
-                onChange={handleFilterValueChange}
-                onKeyDown={handleFilterKeyDown}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#1A72FB] focus:ring-2 focus:ring-[#1A72FB]/40"
-              />
+              {activeFilter.filterType === 'date' ? (
+                <FloatingLabelInput
+                  ref={filterInputRef}
+                  label={activeFilter.label}
+                  type="date"
+                  value={activeFilter.value}
+                  onChange={handleFilterValueChange}
+                  onKeyDown={handleFilterKeyDown}
+                />
+              ) : (
+                <FloatingLabelInput
+                  ref={filterInputRef}
+                  label={activeFilter.label}
+                  type="text"
+                  value={activeFilter.value}
+                  onChange={handleFilterValueChange}
+                  onKeyDown={handleFilterKeyDown}
+                />
+              )}
             </div>
             <div className="mt-4 flex items-center justify-between">
               <button
@@ -912,7 +947,7 @@ const ProductTariffDefinitions = () => {
   )
 }
 
-const MethodCard = ({ icon, title, subtitle, onClick }) => {
+const MethodCard = ({ icon, title, subtitle, onClick, onMouseEnter, onMouseLeave, isHovered, isOtherHovered }) => {
   const iconMap = {
     plus: (
       <span className="text-4xl font-bold leading-none">+</span>
@@ -932,9 +967,19 @@ const MethodCard = ({ icon, title, subtitle, onClick }) => {
   return (
     <button
       onClick={onClick}
-      className="group h-36 w-full rounded-xl bg-gradient-to-br from-[#1A72FB] via-[#1965E9] to-[#1555C8] p-5 text-center text-white shadow transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      className={`group h-36 w-full rounded-xl bg-gradient-to-br from-[#1A72FB] via-[#1965E9] to-[#1555C8] p-5 text-center text-white shadow transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 ${
+        isHovered 
+          ? 'scale-110 -translate-y-1 z-10' 
+          : isOtherHovered 
+            ? 'scale-95 opacity-60' 
+            : 'scale-100'
+      }`}
     >
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-white/15 text-white shadow-inner">
+      <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-white/15 text-white shadow-inner transition-transform duration-300 ${
+        isHovered ? 'scale-125' : ''
+      }`}>
         {iconMap[icon]}
       </div>
       <h3 className="mt-3 text-base font-semibold text-white">{title}</h3>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { X } from 'lucide-react'
 import {
   SearchOutlined,
   UnorderedListOutlined,
@@ -94,6 +95,22 @@ const Sidebar = () => {
     }
   }, [activeSubmenu])
 
+  // Location değiştiğinde alt menüyü kapat
+  useEffect(() => {
+    setActiveSubmenu(null)
+  }, [location.pathname])
+
+  // Modal açıldığında alt menüyü kapat
+  useEffect(() => {
+    const handleCloseSubmenu = () => {
+      setActiveSubmenu(null)
+    }
+    window.addEventListener('closeSubmenu', handleCloseSubmenu)
+    return () => {
+      window.removeEventListener('closeSubmenu', handleCloseSubmenu)
+    }
+  }, [])
+
   return (
     <>
       <aside className="relative z-20 w-14 flex flex-col items-center bg-[#8746FA] text-white shadow-lg overflow-hidden">
@@ -164,11 +181,18 @@ const Sidebar = () => {
               transform: 'translateY(-50%)'
             }}
           >
-            <div className="px-4 py-3 border-b border-gray-100">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-base font-semibold text-[#8746FA]">Ürün Tarife Plan Tanımları</h2>
+              <button
+                onClick={() => setActiveSubmenu(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Menüyü kapat"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
             <ul className="py-2">
-              {activeItem.submenu.map((submenuItem) => (
+              {activeItem.submenu.map((submenuItem, index) => (
                 <li key={submenuItem.label}>
                   <button
                     onClick={() => handleSubmenuClick(submenuItem)}
@@ -177,6 +201,9 @@ const Sidebar = () => {
                     <span className="text-lg leading-none">+</span>
                     <span>{submenuItem.label}</span>
                   </button>
+                  {index < activeItem.submenu.length - 1 && (
+                    <div className="mx-5 border-t border-gray-200" />
+                  )}
                 </li>
               ))}
             </ul>
