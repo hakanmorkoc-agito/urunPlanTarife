@@ -185,6 +185,12 @@ const ProductTariffDefinitions = () => {
 
   const dateFilterKeys = ['gecerlilik_baslangic_tarihi', 'gecerlilik_bitis_tarihi']
 
+  const truncateValue = (value, limit = 50) => {
+    if (!value && value !== 0) return '-'
+    const str = String(value)
+    return str.length > limit ? `${str.slice(0, limit)}…` : str
+  }
+
   const filteredProducts = products.filter(product => {
     return Object.keys(searchFilters).every(key => {
       const filterValue = searchFilters[key]
@@ -207,9 +213,13 @@ const ProductTariffDefinitions = () => {
     }
 
     const rect = event.currentTarget.getBoundingClientRect()
+    const popoverWidth = 240
+    const viewportWidth = window.innerWidth
+    const safeLeft = Math.min(Math.max(rect.left, 12), viewportWidth - popoverWidth - 12)
+
     setFilterPosition({
-      top: rect.bottom + window.scrollY + 8,
-      left: rect.left + window.scrollX - 120
+      top: rect.bottom + 8,
+      left: safeLeft
     })
 
     setActiveFilter({
@@ -385,28 +395,33 @@ const ProductTariffDefinitions = () => {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                {tableColumns.map((column) => (
-                  <th
-                    key={column.key}
-                    className={`px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-600 uppercase ${column.widthClass || ''}`}
-                  >
-                    <div className="flex items-center gap-2 whitespace-nowrap">
-                      <span>{column.label}</span>
-                      {column.filterType && (
-                        <button
-                          type="button"
-                          onClick={(event) => openFilter(column, event)}
-                          className={`rounded-full p-1 transition ${
-                            activeFilter?.key === column.key ? 'bg-[#1A72FB]/10 text-[#1A72FB]' : 'text-gray-400 hover:text-[#1A72FB]'
-                          }`}
-                          aria-label={`${column.label} için filtrele`}
-                        >
-                          <Search className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </th>
-                ))}
+                {tableColumns.map((column) => {
+                  const isActionsColumn = column.key === 'actions'
+                  const stickyHeaderClass = isActionsColumn ? 'sticky right-0 top-0 z-30 bg-gray-50 border-l border-gray-200' : ''
+
+                  return (
+                    <th
+                      key={column.key}
+                      className={`px-3 py-2.5 text-left text-[11px] font-semibold tracking-wide text-gray-600 uppercase ${column.widthClass || ''} ${stickyHeaderClass}`}
+                    >
+                      <div className="flex items-center gap-2 whitespace-nowrap">
+                        <span>{column.label}</span>
+                        {column.filterType && (
+                          <button
+                            type="button"
+                            onClick={(event) => openFilter(column, event)}
+                            className={`rounded-full p-1 transition ${
+                              activeFilter?.key === column.key ? 'bg-[#1A72FB]/10 text-[#1A72FB]' : 'text-gray-400 hover:text-[#1A72FB]'
+                            }`}
+                            aria-label={`${column.label} için filtrele`}
+                          >
+                            <Search className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </th>
+                  )
+                })}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -423,99 +438,157 @@ const ProductTariffDefinitions = () => {
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((product) => (
-                  <tr
-                    key={product.id}
-                    className={`cursor-pointer transition ${hoveredProductId === product.id ? 'bg-[#EEF4FF]' : 'bg-white hover:bg-[#F8FAFF]'}`}
-                    onClick={() => navigate(`/plan-tanimi/${product.id}`)}
-                    onMouseEnter={() => setHoveredProductId(product.id)}
-                    onMouseLeave={() => setHoveredProductId(null)}
-                  >
-                    {tableColumns.map((column) => {
-                      if (column.key === 'actions') {
+                filteredProducts.map((product) => {
+                  const isHovered = hoveredProductId === product.id
+                  return (
+                    <tr
+                      key={product.id}
+                      className="relative cursor-pointer transition"
+                      onClick={() => navigate(`/plan-tanimi/${product.id}`)}
+                      onMouseEnter={() => setHoveredProductId(product.id)}
+                      onMouseLeave={() => setHoveredProductId(null)}
+                    >
+                      {tableColumns.map((column) => {
+                        const isActionsColumn = column.key === 'actions'
+                        
+                        let cellClasses = 'px-3 py-2 align-top text-[13px] text-gray-900 whitespace-nowrap'
+                        if (isHovered) {
+                          cellClasses += ' bg-[#EEF4FF]'
+                        } else {
+                          cellClasses += ' bg-white group-hover:bg-[#F8FAFF]'
+                        }
+
+                        if (isActionsColumn) {
+                          cellClasses += ' sticky right-0 z-20 border-l border-gray-200'
+                        }
+                        
+                        if (column.key === 'actions') {
+                          return (
+                            <td key={`${product.id}-${column.key}`} className={cellClasses}>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={(event) => handleEditProduct(event, product.id)}
+                                  className="rounded-lg border border-[#1A72FB]/30 bg-white p-1.5 text-[#1A72FB] hover:bg-[#1A72FB]/10 transition"
+                                  aria-label="Güncelle"
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={(event) => handleDuplicateProduct(event, product)}
+                                  className="rounded-lg border border-emerald-400/40 bg-white p-1.5 text-emerald-500 hover:bg-emerald-50 transition"
+                                  aria-label="Kopyala"
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={(event) => handleDeleteProduct(event, product.id)}
+                                  className="rounded-lg border border-red-400/40 bg-white p-1.5 text-red-500 hover:bg-red-50 transition"
+                                  aria-label="Sil"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                          )
+                        }
+
+                        if (column.key === 'ulke') {
+                          return (
+                            <td key={`${product.id}-${column.key}`} className={cellClasses}>
+                              <div className="flex items-center gap-2 whitespace-nowrap">
+                                <span className="text-sm font-medium text-gray-900">{product.ulke}</span>
+                                <span className="rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 bg-green-100">DB</span>
+                              </div>
+                            </td>
+                          )
+                        }
+
+                        if (column.key === 'durum') {
+                          return (
+                             <td key={`${product.id}-${column.key}`} className={`${cellClasses} px-4 py-2.5`}>
+                              <span className="rounded-full bg-[#8746FA]/10 px-3 py-1 text-[11px] font-semibold text-[#8746FA]">
+                                {product.durum || '-'}
+                              </span>
+                            </td>
+                          )
+                        }
+
+                        if (dateFilterKeys.includes(column.key)) {
+                          return (
+                            <td key={`${product.id}-${column.key}`} className={cellClasses}>
+                              {formatDate(product[column.key])}
+                            </td>
+                          )
+                        }
+
+                        const rawValue = product[column.key]
+                        const displayValue = truncateValue(rawValue)
+
                         return (
-                          <td key={`${product.id}-${column.key}`} className="px-4 py-2.5">
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                onClick={(event) => handleEditProduct(event, product.id)}
-                                className="rounded-lg border border-[#1A72FB]/30 bg-white p-1.5 text-[#1A72FB] hover:bg-[#1A72FB]/10 transition"
-                                aria-label="Güncelle"
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={(event) => handleDuplicateProduct(event, product)}
-                                className="rounded-lg border border-emerald-400/40 bg-white p-1.5 text-emerald-500 hover:bg-emerald-50 transition"
-                                aria-label="Kopyala"
-                              >
-                                <Copy className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={(event) => handleDeleteProduct(event, product.id)}
-                                className="rounded-lg border border-red-400/40 bg-white p-1.5 text-red-500 hover:bg-red-50 transition"
-                                aria-label="Sil"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
+                          <td
+                            key={`${product.id}-${column.key}`}
+                            className={cellClasses}
+                            title={rawValue || ''}
+                          >
+                            {displayValue}
                           </td>
                         )
-                      }
-
-                      if (column.key === 'ulke') {
-                        return (
-                          <td key={`${product.id}-${column.key}`} className="px-4 py-2.5">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-gray-900">{product.ulke}</span>
-                              <span className="rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 bg-green-100">DB</span>
-                            </div>
-                          </td>
-                        )
-                      }
-
-                      if (column.key === 'durum') {
-                        return (
-                          <td key={`${product.id}-${column.key}`} className="px-4 py-2.5">
-                            <span className="rounded-full bg-[#8746FA]/10 px-3 py-1 text-[11px] font-semibold text-[#8746FA]">
-                              {product.durum || '-'}
-                            </span>
-                          </td>
-                        )
-                      }
-
-                      if (dateFilterKeys.includes(column.key)) {
-                        return (
-                          <td key={`${product.id}-${column.key}`} className="px-4 py-2.5 text-sm text-gray-900">
-                            {formatDate(product[column.key])}
-                          </td>
-                        )
-                      }
-
-                      return (
-                        <td key={`${product.id}-${column.key}`} className="px-4 py-2.5 text-sm text-gray-900">
-                          {product[column.key] || '-'}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))
+                      })}
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
         </div>
 
-        <div className="flex flex-col gap-1 border-t border-gray-100 bg-gray-50 px-4 py-3 text-xs font-medium text-gray-600 md:flex-row md:items-center md:justify-between">
-          <span>
-            Filtre sonucu <span className="font-semibold text-gray-800">{filteredProducts.length}</span> kayıt görüntüleniyor.
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 bg-gray-50/75 px-4 py-2 text-sm text-gray-600">
+          <span className="font-semibold">
+            Toplam <span className="text-gray-800">{filteredProducts.length}</span> veri
           </span>
-          <span>
-            Toplam kayıt: <span className="font-semibold text-gray-800">{products.length}</span>
-          </span>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-1">
+              <button className="rounded px-2 py-1 text-gray-500 hover:bg-gray-200" aria-label="Önceki sayfa">‹</button>
+              {[1, 2, 3, 4, 5].map((page) => (
+                <button
+                  key={page}
+                  className={`rounded px-2.5 py-1 text-xs ${
+                    page === 1
+                      ? 'bg-blue-600 font-semibold text-white shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <span className="px-1">…</span>
+              <button className="rounded px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-200">27</button>
+              <button className="rounded px-2 py-1 text-gray-500 hover:bg-gray-200" aria-label="Sonraki sayfa">›</button>
+            </div>
+            <div className="flex items-center gap-2">
+               <select className="h-8 rounded-md border border-gray-300 bg-white px-2 text-xs focus:border-blue-500 focus:ring-blue-500">
+                <option>10 / sayfa</option>
+                <option>20 / sayfa</option>
+                <option>50 / sayfa</option>
+              </select>
+              <div className="flex items-center">
+                <input
+                  type="number"
+                  min="1"
+                  className="h-8 w-16 rounded-l-md border border-r-0 border-gray-300 px-2 text-center text-xs focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  placeholder="Sayfa"
+                />
+                <button className="h-8 rounded-r-md bg-gray-200 px-3 text-xs font-semibold text-gray-700 hover:bg-gray-300" type="button">
+                  Git
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {activeFilter && (
           <div
-            className="absolute z-30 w-60 rounded-xl border border-gray-200 bg-white p-4 shadow-2xl"
+            className="fixed z-50 w-60 rounded-xl border border-gray-200 bg-white p-4 shadow-2xl"
             style={{ top: filterPosition.top, left: filterPosition.left }}
           >
             <p className="text-sm font-semibold text-gray-800">{activeFilter.label}</p>
