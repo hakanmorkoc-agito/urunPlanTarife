@@ -1,6 +1,19 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Home, Search, Star, Settings, Layers } from 'lucide-react'
+import {
+  Search,
+  SlidersHorizontal,
+  Layers,
+  Wallet,
+  Workflow,
+  ServerCog,
+  Settings2,
+  Users,
+  Send,
+  Briefcase,
+  Cog,
+  AppWindow
+} from 'lucide-react'
 
 const Sidebar = () => {
   const navigate = useNavigate()
@@ -8,8 +21,10 @@ const Sidebar = () => {
   const [activeSubmenu, setActiveSubmenu] = useState(null)
 
   const menuItems = [
-    { icon: Home, path: '/dashboard', label: 'Dashboard' },
+    { id: 'search', icon: Search, label: 'Arama Yap' },
+    { id: 'parameters', icon: SlidersHorizontal, label: 'Parametreler' },
     {
+      id: 'product-tariff',
       icon: Layers,
       path: '/urun-tarife-tanimlari',
       label: 'Ürün Tarife Plan Tanımları',
@@ -26,21 +41,32 @@ const Sidebar = () => {
         { label: 'Fon Tanımları', path: '/urun-tarife-tanimlari' }
       ]
     },
-    { icon: Search, path: '/search', label: 'Ara' },
-    { icon: Star, path: '/favorites', label: 'Favoriler' },
-    { icon: Settings, path: '/settings', label: 'Ayarlar' },
+    { id: 'finance', icon: Wallet, label: 'Finans' },
+    { id: 'workflow', icon: Workflow, label: 'İş Akışı' },
+    { id: 'background', icon: ServerCog, label: 'Arka Plan İşlemleri' },
+    { id: 'rules', icon: Settings2, label: 'Kural İşlemleri' },
+    { id: 'customer', icon: Users, label: 'Müşteri İşlemleri' },
+    { id: 'delivery', icon: Send, label: 'Gönderi' },
+    { id: 'pool', icon: Briefcase, label: 'İş Havuzu' },
+    { id: 'system', icon: Cog, label: 'Kullanıcı ve Sistem Ayarları' },
+    { id: 'l4u', icon: AppWindow, label: 'L4U Uygulama Menüsü' }
   ]
 
   const isItemActive = (itemPath, active) => {
+    if (!itemPath) {
+      return Boolean(active)
+    }
+
     if (itemPath === '/dashboard') {
       return location.pathname === '/' || location.pathname.startsWith('/dashboard')
     }
-    return location.pathname.includes(itemPath) || active
+
+    return location.pathname.includes(itemPath) || Boolean(active)
   }
 
   const handleMenuClick = (item) => {
     if (item.submenu) {
-      setActiveSubmenu((prev) => (prev === item.path ? null : item.path))
+      setActiveSubmenu((prev) => (prev === item.id ? null : item.id))
       return
     }
 
@@ -56,26 +82,25 @@ const Sidebar = () => {
   }
 
   return (
-    <aside className="relative z-20 w-16 flex flex-col items-center py-8 bg-[#8746FA] text-white shadow-lg">
-      {/* Menu */}
-      <nav className="flex-1 flex flex-col items-center space-y-3 w-full">
-        {menuItems.map((item, index) => {
+    <aside className="relative z-20 w-16 flex flex-col items-center bg-[#8746FA] text-white shadow-lg">
+      <nav className="flex-1 flex flex-col items-center justify-center space-y-3 py-10 px-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+        {menuItems.map((item) => {
           const Icon = item.icon
           const isActive = isItemActive(item.path, item.active)
 
           return (
             <button
-              key={index}
+              key={item.id}
               onClick={() => handleMenuClick(item)}
-              className={`group relative w-10 h-10 flex items-center justify-center rounded-2xl transition-all duration-200 ${
+              className={`group relative flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-200 ${
                 isActive
-                  ? 'bg-white text-[#8746FA] shadow shadow-black/20'
-                  : 'bg-white/10 hover:bg-white/20'
+                  ? 'bg-white text-[#8746FA] shadow-lg ring-2 ring-white/40'
+                  : 'bg-white/10 text-white hover:bg-white/20'
               }`}
               aria-label={item.label}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-[#8746FA]' : 'text-white'}`} strokeWidth={1.8} />
-              <span className="pointer-events-none absolute left-14 whitespace-nowrap bg-black/85 text-white text-xs font-medium px-3 py-1 rounded-lg shadow-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150">
+              <Icon className="h-4 w-4" strokeWidth={1.8} />
+              <span className="pointer-events-none absolute left-[3.25rem] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-black/85 px-3 py-1 text-xs font-medium text-white opacity-0 transition-all duration-150 group-hover:opacity-100">
                 {item.label}
               </span>
             </button>
@@ -84,13 +109,13 @@ const Sidebar = () => {
       </nav>
 
       {activeSubmenu && (
-        <div className="absolute left-full top-10 ml-4 w-64 rounded-xl bg-white text-gray-800 shadow-xl border border-[#8746FA]/10">
+        <div className="absolute left-full top-1/2 ml-4 w-64 -translate-y-1/2 rounded-xl border border-[#8746FA]/10 bg-white text-gray-800 shadow-xl">
           <div className="px-4 py-3 border-b border-gray-100">
             <h2 className="text-base font-semibold text-[#8746FA]">Ürün Tarife Plan Tanımları</h2>
           </div>
           <ul className="py-2">
             {menuItems
-              .find((item) => item.path === activeSubmenu)?.submenu?.map((submenuItem) => (
+              .find((item) => item.id === activeSubmenu)?.submenu?.map((submenuItem) => (
                 <li key={submenuItem.label}>
                   <button
                     onClick={() => handleSubmenuClick(submenuItem)}
@@ -109,4 +134,3 @@ const Sidebar = () => {
 }
 
 export default Sidebar
-

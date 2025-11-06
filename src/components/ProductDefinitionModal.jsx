@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 
-const ProductDefinitionModal = ({ onClose, onSelect }) => {
+const ProductDefinitionModal = ({ mode = 'new', onClose, onSelect }) => {
+  const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
     brans: '',
     ulke: '',
@@ -10,13 +11,130 @@ const ProductDefinitionModal = ({ onClose, onSelect }) => {
 
   const isFormValid = formData.brans && formData.ulke && formData.dil
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  // Katalog ürünleri - gerçek uygulamada API'den gelecek
+  const catalogProducts = [
+    {
+      id: 1,
+      name: 'Otomatik Katılım',
+      description: 'Çalışanların otomatik olarak katıldığı emeklilik planı',
+      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop'
+    },
+    {
+      id: 2,
+      name: 'Ferdi',
+      description: 'Bireysel emeklilik planı seçenekleri',
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop'
+    }
+  ]
+
+  const handleNext = () => {
     if (isFormValid) {
-      onSelect('new', formData)
+      if (mode === 'catalog') {
+        setStep(2)
+      } else {
+        onSelect('new', formData)
+      }
     }
   }
 
+  const handleBack = () => {
+    if (step === 2) {
+      setStep(1)
+    } else {
+      onClose()
+    }
+  }
+
+  const handleProductSelect = (product) => {
+    onSelect('catalog', { ...formData, selectedProduct: product })
+  }
+
+  // Katalog modunda ve step 2'deyse ürün kartlarını göster
+  if (mode === 'catalog' && step === 2) {
+    return (
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+        <div className="w-full max-w-4xl rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-[#8746FA] to-[#7335E8]">
+            <h2 className="text-xl font-semibold text-white">Katalog Şablonları</h2>
+            <button
+              onClick={onClose}
+              className="rounded-full p-1 text-white/80 transition hover:bg-white/20 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            {/* Selected Filters */}
+            <div className="flex items-center gap-2 mb-4">
+              {formData.brans && (
+                <span className="px-3 py-1 rounded-full bg-gray-100 text-sm text-gray-700">
+                  {formData.brans}
+                </span>
+              )}
+              {formData.ulke && (
+                <span className="px-3 py-1 rounded-full bg-gray-100 text-sm text-gray-700">
+                  {formData.ulke}
+                </span>
+              )}
+              {formData.dil && (
+                <span className="px-3 py-1 rounded-full bg-gray-100 text-sm text-gray-700">
+                  {formData.dil}
+                </span>
+              )}
+            </div>
+
+            <p className="text-sm text-gray-600 mb-6 text-center">
+              Seçiminize uygun şablonlardan birini seçin
+            </p>
+
+            {/* Product Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {catalogProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                >
+                  <div className="h-48 bg-gray-200 overflow-hidden">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
+                    <p className="text-sm text-gray-600 mb-4">{product.description}</p>
+                    <button
+                      onClick={() => handleProductSelect(product)}
+                      className="w-full rounded-lg bg-[#8746FA] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#7335E8] transition-colors"
+                    >
+                      Seç
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span>Geri</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Step 1: Form (hem new hem catalog için)
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
       <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl">
@@ -37,10 +155,10 @@ const ProductDefinitionModal = ({ onClose, onSelect }) => {
             Yeni ürün için ilk adımı atın, Branş, Ülke ve Dil bilgilerini girin.
           </p>
           
-          <h3 className="text-lg font-semibold text-sidebar-dark mb-1">Yeni Ürün Tanımlama</h3>
+          <h3 className="text-lg font-semibold text-[#8746FA] mb-1">Katalog Şablonları</h3>
           <p className="text-xs text-gray-500 mb-5">Temel bilgileri girin</p>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={(e) => { e.preventDefault(); handleNext(); }}>
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
@@ -99,14 +217,14 @@ const ProductDefinitionModal = ({ onClose, onSelect }) => {
         {/* Footer */}
         <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50">
           <button
-            onClick={onClose}
+            onClick={handleBack}
             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
           >
             <ChevronLeft className="h-4 w-4" />
             <span>Geri</span>
           </button>
           <button
-            onClick={handleSubmit}
+            onClick={handleNext}
             disabled={!isFormValid}
             className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${
               isFormValid
@@ -124,4 +242,3 @@ const ProductDefinitionModal = ({ onClose, onSelect }) => {
 }
 
 export default ProductDefinitionModal
-

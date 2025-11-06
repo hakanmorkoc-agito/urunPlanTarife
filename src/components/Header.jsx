@@ -1,5 +1,16 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Home, X, RefreshCw, PieChart, BarChart3 } from 'lucide-react'
+import {
+  Home,
+  X,
+  PieChart,
+  BarChart3,
+  Building2,
+  Flag,
+  Bell,
+  Moon,
+  Maximize2,
+  ChevronDown
+} from 'lucide-react'
 import { useDashboardView } from '../context/DashboardViewContext'
 
 const Header = () => {
@@ -38,39 +49,64 @@ const Header = () => {
 
         {/* Chart Type Selector */}
         {(location.pathname === '/dashboard' || location.pathname === '/') && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1 rounded-full border border-gray-100 bg-white px-1.5 py-1 shadow-sm">
             <button
               onClick={() => setChartType('donut')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded transition-colors ${
-                chartType === 'donut' ? 'bg-sidebar-light text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                chartType === 'donut'
+                  ? 'bg-[#8746FA] text-white shadow'
+                  : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <PieChart className="w-4 h-4" />
-              <span className="text-sm font-medium">Pasta Dilim</span>
+              <PieChart className="h-3.5 w-3.5" />
+              <span>Pasta Dilim</span>
             </button>
             <button
               onClick={() => setChartType('column')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded transition-colors ${
-                chartType === 'column' ? 'bg-sidebar-light text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                chartType === 'column'
+                  ? 'bg-[#8746FA] text-white shadow'
+                  : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <BarChart3 className="w-4 h-4" />
-              <span className="text-sm">Kolon</span>
+              <BarChart3 className="h-3.5 w-3.5" />
+              <span>Kolon</span>
             </button>
           </div>
         )}
 
-        {/* Refresh Button */}
-        {location.pathname.includes('/urun-tarife-tanimlari') && (
-          <div className="flex items-center space-x-2">
-            <RefreshCw className="w-4 h-4 text-gray-600" />
-            <span className="text-sm text-gray-600">Yenile (6 DB)</span>
+        <div className="flex items-center gap-2 text-[10px]">
+          <div className="flex items-center gap-1.5 rounded-full border border-white/60 bg-white px-3 py-1 shadow-sm">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#8746FA]/15 text-[#8746FA]">
+              <Building2 className="h-3 w-3" />
+            </span>
+            <span className="font-semibold text-[#5825D6]">Agito Emeklilik</span>
           </div>
-        )}
+          <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-0.5 font-semibold text-gray-600">
+            <Flag className="h-2.5 w-2.5 text-red-500" />
+            <span>TR</span>
+          </div>
+          <button className="relative rounded-full border border-[#F97373]/40 bg-white p-1.5 text-gray-600 transition hover:bg-[#F97373]/10" aria-label="Bildirimler">
+            <Bell className="h-3 w-3" />
+            <span className="absolute -right-1 -top-1 rounded-full bg-[#F97373] px-1 text-[8px] font-bold text-white">99+</span>
+          </button>
+          <button className="rounded-full border border-gray-200 bg-white p-1.5 text-gray-500 transition hover:bg-gray-100" aria-label="Mod değiştir">
+            <Moon className="h-3 w-3" />
+          </button>
+          <button className="rounded-full border border-gray-200 bg-white p-1.5 text-gray-500 transition hover:bg-gray-100" aria-label="Ekranı büyüt">
+            <Maximize2 className="h-3 w-3" />
+          </button>
+          <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-0.5 shadow-sm">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#8746FA] text-[10px] font-semibold text-white">
+              HM
+            </div>
+            <span className="text-[11px] font-semibold text-gray-700">Hakan Morkoç</span>
+            <ChevronDown className="h-3 w-3 text-gray-400" />
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
 export default Header
-

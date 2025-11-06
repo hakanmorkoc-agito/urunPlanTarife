@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Plus, Search, Edit2, Copy, Trash2 } from 'lucide-react'
+import { Search, Edit2, Copy, Trash2 } from 'lucide-react'
 import ProductDefinitionModal from '../components/ProductDefinitionModal'
-import SupabaseTest from '../components/SupabaseTest'
 
 const ProductTariffDefinitions = () => {
   const navigate = useNavigate()
@@ -152,8 +151,8 @@ const ProductTariffDefinitions = () => {
   }
 
   const handleMethodAction = (method) => {
-    if (method === 'new') {
-      openSelectionModal('new')
+    if (method === 'new' || method === 'catalog') {
+      openSelectionModal(method)
       return
     }
 
@@ -345,10 +344,9 @@ const ProductTariffDefinitions = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        {/* Header with Supabase Test Button */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-gray-900">Ürün Tarife Plan Tanımları</h1>
-          <SupabaseTest />
         </div>
         
         {/* Ürün Tanımı Section */}
@@ -356,10 +354,9 @@ const ProductTariffDefinitions = () => {
           <div className="h-6 w-1 rounded-full bg-sidebar-dark"></div>
           <button
             onClick={() => openSelectionModal('new')}
-            className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[#1A72FB] transition hover:text-[#155ED5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A72FB]/40"
+            className="text-sm font-semibold uppercase tracking-wide text-[#1A72FB] transition hover:text-[#155ED5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A72FB]/40"
           >
-            <span>Yeni Ürün Tanımla</span>
-            <Plus className="h-4 w-4" />
+            Yeni Ürün Tanımla
           </button>
         </div>
 
@@ -497,7 +494,6 @@ const ProductTariffDefinitions = () => {
                             <td key={`${product.id}-${column.key}`} className={cellClasses}>
                               <div className="flex items-center gap-2 whitespace-nowrap">
                                 <span className="text-sm font-medium text-gray-900">{product.ulke}</span>
-                                <span className="rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 bg-green-100">DB</span>
                               </div>
                             </td>
                           )
@@ -630,6 +626,7 @@ const ProductTariffDefinitions = () => {
 
       {showModal && (
         <ProductDefinitionModal
+          mode={pendingMethod || 'new'}
           onClose={() => {
             setShowModal(false)
             setPendingMethod(null)
