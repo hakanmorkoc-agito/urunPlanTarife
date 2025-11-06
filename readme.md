@@ -95,6 +95,94 @@ npm run build
 npm run preview
 ```
 
+## Production Deployment
+
+### Build Oluşturma
+
+```bash
+npm run build
+```
+
+Build dosyaları `dist` klasörüne oluşturulacaktır.
+
+### Environment Variables
+
+Production ortamında `.env` dosyası oluşturun veya hosting platformunuzun environment variables ayarlarına şunları ekleyin:
+
+```
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+### Deployment Seçenekleri
+
+#### 1. Vercel
+
+1. [Vercel](https://vercel.com) hesabı oluşturun
+2. GitHub repository'nizi bağlayın
+3. Environment variables'ları ekleyin
+4. Deploy edin
+
+`vercel.json` dosyası otomatik olarak yapılandırılmıştır.
+
+#### 2. Netlify
+
+1. [Netlify](https://netlify.com) hesabı oluşturun
+2. GitHub repository'nizi bağlayın
+3. Build command: `npm run build`
+4. Publish directory: `dist`
+5. Environment variables'ları ekleyin
+6. Deploy edin
+
+`netlify.toml` dosyası otomatik olarak yapılandırılmıştır.
+
+#### 3. Apache Server
+
+1. `dist` klasöründeki dosyaları web sunucunuza yükleyin
+2. `.htaccess` dosyası otomatik olarak SPA routing'i yönetir
+3. Apache'de `mod_rewrite` modülünün aktif olduğundan emin olun
+
+#### 4. Nginx
+
+Nginx için `nginx.conf` örneği:
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+    root /path/to/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /assets {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+#### 5. Diğer Static Hosting
+
+- **GitHub Pages**: `dist` klasörünü `gh-pages` branch'ine push edin
+- **AWS S3 + CloudFront**: S3 bucket'a `dist` klasörünü yükleyin
+- **Azure Static Web Apps**: GitHub Actions ile otomatik deploy
+
+### Önemli Notlar
+
+- ✅ SPA routing için `_redirects` (Netlify) veya `.htaccess` (Apache) dosyaları hazır
+- ✅ Production build'de console.log'lar otomatik olarak kaldırılır
+- ✅ Code splitting ve lazy loading optimize edilmiştir
+- ✅ Asset caching headers yapılandırılmıştır
+- ⚠️ Supabase CORS ayarlarını production domain'iniz için yapılandırmayı unutmayın
+
+### Supabase CORS Ayarları
+
+Supabase Dashboard > Settings > API > CORS:
+- Production domain'inizi ekleyin (örn: `https://your-domain.com`)
+
 ## Lisans
 
 MIT

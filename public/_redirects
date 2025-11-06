@@ -1,0 +1,4 @@
+# Netlify SPA Routing
+# Tüm route'ları index.html'e yönlendir (React Router için)
+/*    /index.html   200
+
