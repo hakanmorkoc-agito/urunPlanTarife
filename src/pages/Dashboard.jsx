@@ -17,57 +17,77 @@ const Dashboard = () => {
 
   const fetchPlans = async () => {
     setLoading(true)
+    
+    // Fallback demo verisi
+    const fallbackPlans = [
+      {
+        id: 1,
+        durum: 'Draft',
+        brans: 'Bireysel Emeklilik',
+        sozlesme_tipi: 'Bireysel',
+        baslangic_tarihi: '2025-11-03',
+        bitis_tarihi: '2099-12-31'
+      },
+      {
+        id: 2,
+        durum: 'Active',
+        brans: 'Hayat',
+        sozlesme_tipi: 'Grup',
+        baslangic_tarihi: '2024-04-01',
+        bitis_tarihi: '2090-12-31'
+      },
+      {
+        id: 3,
+        durum: 'Active',
+        brans: 'Sağlık',
+        sozlesme_tipi: 'Kurumsal',
+        baslangic_tarihi: '2023-01-10',
+        bitis_tarihi: '2099-12-31'
+      },
+      {
+        id: 4,
+        durum: 'Inactive',
+        brans: 'Bireysel Emeklilik',
+        sozlesme_tipi: 'Bireysel',
+        baslangic_tarihi: '2022-06-15',
+        bitis_tarihi: '2024-06-14'
+      }
+    ]
+
     try {
       if (supabase) {
         const { data, error } = await supabase
           .from('plans')
           .select('id, durum, brans, sozlesme_tipi, baslangic_tarihi, bitis_tarihi')
 
-        if (error) throw error
-        if (Array.isArray(data)) {
+        if (error) {
+          console.error('Supabase hatası:', error)
+          // Hata durumunda fallback veriyi kullan
+          setPlans(fallbackPlans)
+          setLoading(false)
+          return
+        }
+        
+        if (Array.isArray(data) && data.length > 0) {
           setPlans(data)
+          setLoading(false)
+          return
+        } else {
+          // Veri yoksa fallback veriyi kullan
+          console.warn('Supabase\'den veri gelmedi, fallback veri kullanılıyor')
+          setPlans(fallbackPlans)
+          setLoading(false)
           return
         }
       }
 
-      // Fallback demo verisi
-      const fallbackPlans = [
-        {
-          id: 1,
-          durum: 'Draft',
-          brans: 'Bireysel Emeklilik',
-          sozlesme_tipi: 'Bireysel',
-          baslangic_tarihi: '2025-11-03',
-          bitis_tarihi: '2099-12-31'
-        },
-        {
-          id: 2,
-          durum: 'Active',
-          brans: 'Hayat',
-          sozlesme_tipi: 'Grup',
-          baslangic_tarihi: '2024-04-01',
-          bitis_tarihi: '2090-12-31'
-        },
-        {
-          id: 3,
-          durum: 'Active',
-          brans: 'Sağlık',
-          sozlesme_tipi: 'Kurumsal',
-          baslangic_tarihi: '2023-01-10',
-          bitis_tarihi: '2099-12-31'
-        },
-        {
-          id: 4,
-          durum: 'Inactive',
-          brans: 'Bireysel Emeklilik',
-          sozlesme_tipi: 'Bireysel',
-          baslangic_tarihi: '2022-06-15',
-          bitis_tarihi: '2024-06-14'
-        }
-      ]
+      // Supabase yoksa fallback veriyi kullan
+      console.warn('Supabase bağlantısı yok, fallback veri kullanılıyor')
       setPlans(fallbackPlans)
     } catch (error) {
       console.error('Plan verileri alınırken hata oluştu:', error)
+      // Hata durumunda da fallback veriyi kullan
+      setPlans(fallbackPlans)
     } finally {
       setLoading(false)
     }

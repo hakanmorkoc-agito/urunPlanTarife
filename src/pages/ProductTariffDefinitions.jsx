@@ -356,19 +356,14 @@ const ProductTariffDefinitions = () => {
         if (plansData) {
           // Plans tablosunda kayıt varsa, tüm bilgileri al ve versiyon no'yu bir artır
           planData = {
+            ...plansData,
             brans: plansData.brans || productData.brans,
             ulke: plansData.ulke || productData.ulke,
             dil: plansData.dil || productData.dil,
-            sozlesme_tipi: plansData.sozlesme_tipi || '',
             plan_kodu: plansData.plan_kodu || productData.urun_kodu,
             plan_versiyon_no: String(Number(plansData.plan_versiyon_no || '0') + 1),
             plan_kisa_adi: plansData.plan_kisa_adi || productData.urun_adi,
             plan_uzun_adi: plansData.plan_uzun_adi || productData.urun_uzun_adi,
-            basvuru_tipi: plansData.basvuru_tipi || '',
-            kategori_kodu: plansData.kategori_kodu || '',
-            zimmet_tipi: plansData.zimmet_tipi || '',
-            baslangic_tarihi: plansData.baslangic_tarihi || '',
-            bitis_tarihi: plansData.bitis_tarihi || '',
             durum: plansData.durum || productData.durum || 'Draft',
             // Orijinal plan ID'sini sakla (yeni versiyon oluşturma için)
             id: plansData.id

@@ -24,7 +24,23 @@ const PlanDefinition = () => {
     zimmet_tipi: '',
     baslangic_tarihi: '',
     bitis_tarihi: '',
-    durum: 'Draft'
+    durum: 'Draft',
+    hazine_plan_kodu: '',
+    hazine_tasdik_tarihi: '',
+    gecerli_sozlesme_cinsi: '',
+    kur_tipi: '',
+    doviz_para_cinsleri: '',
+    min_giris_yas: '',
+    max_giris_yas: '',
+    hesap_birlestirme_zorunlu: false,
+    katilimci_karti_verilecek: false,
+    vatandaslik: false,
+    ek_kategori_1: '',
+    ek_kategori_2: '',
+    egp_odeme_turleri: '',
+    vakif_aktarim: false,
+    vakif_uye_kurumu: '',
+    hedef_kitle_aciklamasi: ''
   })
 
   useEffect(() => {
@@ -51,7 +67,23 @@ const PlanDefinition = () => {
         zimmet_tipi: initialData.zimmet_tipi || '',
         baslangic_tarihi: initialData.baslangic_tarihi || '',
         bitis_tarihi: initialData.bitis_tarihi || '',
-        durum: initialData.durum || 'Draft'
+        durum: initialData.durum || 'Draft',
+        hazine_plan_kodu: initialData.hazine_plan_kodu || '',
+        hazine_tasdik_tarihi: initialData.hazine_tasdik_tarihi || '',
+        gecerli_sozlesme_cinsi: initialData.gecerli_sozlesme_cinsi || '',
+        kur_tipi: initialData.kur_tipi || '',
+        doviz_para_cinsleri: initialData.doviz_para_cinsleri || '',
+        min_giris_yas: initialData.min_giris_yas || '',
+        max_giris_yas: initialData.max_giris_yas || '',
+        hesap_birlestirme_zorunlu: initialData.hesap_birlestirme_zorunlu || false,
+        katilimci_karti_verilecek: initialData.katilimci_karti_verilecek || false,
+        vatandaslik: initialData.vatandaslik || false,
+        ek_kategori_1: initialData.ek_kategori_1 || '',
+        ek_kategori_2: initialData.ek_kategori_2 || '',
+        egp_odeme_turleri: initialData.egp_odeme_turleri || '',
+        vakif_aktarim: initialData.vakif_aktarim || false,
+        vakif_uye_kurumu: initialData.vakif_uye_kurumu || '',
+        hedef_kitle_aciklamasi: initialData.hedef_kitle_aciklamasi || ''
       })
       // Eğer düzenleme modundaysa, orijinal plan ID'sini sakla
       if (location.state?.isEdit && location.state?.originalProductId) {
@@ -93,6 +125,10 @@ const PlanDefinition = () => {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleCheckboxChange = (field, checked) => {
+    setFormData(prev => ({ ...prev, [field]: checked }))
   }
 
   const handleSave = async () => {
@@ -293,65 +329,61 @@ const PlanDefinition = () => {
       {/* Form Content */}
       <div className="bg-white rounded-lg shadow-md p-6">
         {currentStep === 1 && (
-          <div className="space-y-6">
-            {/* Genel Plan Özellikleri */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Genel Plan Özellikleri</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Branş
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.brans}
-                      onChange={(e) => handleInputChange('brans', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                      readOnly
-                    />
-                    <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
-                  </div>
+          <div className="space-y-8">
+            {/* Üst 3 Alan */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Branş
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.brans}
+                    onChange={(e) => handleInputChange('brans', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    readOnly
+                  />
+                  <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ülke
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.ulke}
-                      onChange={(e) => handleInputChange('ulke', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                      readOnly
-                    />
-                    <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ülke
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.ulke}
+                    onChange={(e) => handleInputChange('ulke', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    readOnly
+                  />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Dil
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.dil}
-                      onChange={(e) => handleInputChange('dil', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                      readOnly
-                    />
-                    <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Dil
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.dil}
+                    onChange={(e) => handleInputChange('dil', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    readOnly
+                  />
+                  <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
                 </div>
               </div>
             </div>
 
             {/* Plan Tipi-Adı */}
-            <div>
+            <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Plan Tipi-Adı</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Sözleşme Tipi <span className="text-red-500">*</span>
@@ -359,13 +391,14 @@ const PlanDefinition = () => {
                   <select
                     value={formData.sozlesme_tipi}
                     onChange={(e) => handleInputChange('sozlesme_tipi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
                     required
                   >
                     <option value="">Seçiniz</option>
-                    <option value="Bireysel">Bireysel</option>
+                    <option value="Ferdi">Ferdi</option>
                     <option value="Grup">Grup</option>
-                    <option value="Kurumsal">Kurumsal</option>
+                    <option value="Otomatik Katılım (OKS)">Otomatik Katılım (OKS)</option>
+                    <option value="Emeklilik Gelir Planı(EGP)">Emeklilik Gelir Planı(EGP)</option>
                   </select>
                 </div>
 
@@ -377,7 +410,7 @@ const PlanDefinition = () => {
                     type="text"
                     value={formData.plan_kodu}
                     onChange={(e) => handleInputChange('plan_kodu', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
                     required
                   />
                 </div>
@@ -391,7 +424,8 @@ const PlanDefinition = () => {
                       type="text"
                       value={formData.plan_versiyon_no}
                       onChange={(e) => handleInputChange('plan_versiyon_no', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                      disabled
                       required
                     />
                     <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
@@ -406,7 +440,7 @@ const PlanDefinition = () => {
                     type="text"
                     value={formData.plan_kisa_adi}
                     onChange={(e) => handleInputChange('plan_kisa_adi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
                     required
                   />
                 </div>
@@ -419,7 +453,7 @@ const PlanDefinition = () => {
                     type="text"
                     value={formData.plan_uzun_adi}
                     onChange={(e) => handleInputChange('plan_uzun_adi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
                     required
                   />
                 </div>
@@ -431,7 +465,7 @@ const PlanDefinition = () => {
                   <select
                     value={formData.basvuru_tipi}
                     onChange={(e) => handleInputChange('basvuru_tipi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
                     required
                   >
                     <option value="">Seçiniz</option>
@@ -448,7 +482,7 @@ const PlanDefinition = () => {
                     type="text"
                     value={formData.kategori_kodu}
                     onChange={(e) => handleInputChange('kategori_kodu', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
                     required
                   />
                 </div>
@@ -462,7 +496,8 @@ const PlanDefinition = () => {
                       type="text"
                       value={formData.zimmet_tipi}
                       onChange={(e) => handleInputChange('zimmet_tipi', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                      disabled
                     />
                     <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
                   </div>
@@ -471,9 +506,9 @@ const PlanDefinition = () => {
             </div>
 
             {/* Plan Tarih-Durum */}
-            <div>
+            <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Plan Tarih-Durum</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Başlangıç Tarihi <span className="text-red-500">*</span>
@@ -482,7 +517,7 @@ const PlanDefinition = () => {
                     type="date"
                     value={formData.baslangic_tarihi}
                     onChange={(e) => handleInputChange('baslangic_tarihi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
                     required
                   />
                 </div>
@@ -495,7 +530,7 @@ const PlanDefinition = () => {
                     type="date"
                     value={formData.bitis_tarihi}
                     onChange={(e) => handleInputChange('bitis_tarihi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
                     required
                   />
                 </div>
@@ -507,13 +542,241 @@ const PlanDefinition = () => {
                   <select
                     value={formData.durum}
                     onChange={(e) => handleInputChange('durum', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
                     required
                   >
                     <option value="Draft">Draft</option>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hazine Plan Kodu <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.hazine_plan_kodu}
+                    onChange={(e) => handleInputChange('hazine_plan_kodu', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hazine Tasdik Tarihi <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.hazine_tasdik_tarihi}
+                    onChange={(e) => handleInputChange('hazine_tasdik_tarihi', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Geçerli Sözleşme Cinsi
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.gecerli_sozlesme_cinsi}
+                      onChange={(e) => handleInputChange('gecerli_sozlesme_cinsi', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                      disabled
+                    />
+                    <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Finansal ve Müşteri Kriterleri */}
+            <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Finansal ve Müşteri Kriterleri</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Kur Tipi <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.kur_tipi}
+                    onChange={(e) => handleInputChange('kur_tipi', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
+                    required
+                  >
+                    <option value="">Seçiniz</option>
+                    <option value="TL">TL</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Döviz-Para Cinsleri <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.doviz_para_cinsleri}
+                    onChange={(e) => handleInputChange('doviz_para_cinsleri', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
+                    required
+                  >
+                    <option value="">Seçiniz</option>
+                    <option value="TL">TL</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Min. Giriş Yaş <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.min_giris_yas}
+                    onChange={(e) => handleInputChange('min_giris_yas', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Max. Giriş Yaş <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.max_giris_yas}
+                    onChange={(e) => handleInputChange('max_giris_yas', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Özel Ayarlar */}
+            <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Özel Ayarlar</h3>
+              <div className="flex flex-wrap gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.hesap_birlestirme_zorunlu}
+                    onChange={(e) => handleCheckboxChange('hesap_birlestirme_zorunlu', e.target.checked)}
+                    className="w-4 h-4 text-[#8746FA] border-gray-300 rounded focus:ring-[#8746FA]"
+                  />
+                  <span className="text-sm text-gray-700">Hesap Birleştirme Zorunlu mu</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.katilimci_karti_verilecek}
+                    onChange={(e) => handleCheckboxChange('katilimci_karti_verilecek', e.target.checked)}
+                    className="w-4 h-4 text-[#8746FA] border-gray-300 rounded focus:ring-[#8746FA]"
+                  />
+                  <span className="text-sm text-gray-700">Katılımcı Kartı Verilecek mi?</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.vatandaslik}
+                    onChange={(e) => handleCheckboxChange('vatandaslik', e.target.checked)}
+                    className="w-4 h-4 text-[#8746FA] border-gray-300 rounded focus:ring-[#8746FA]"
+                  />
+                  <span className="text-sm text-gray-700">Vatandaşlık</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Ek Detaylar */}
+            <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Ek Detaylar</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ek Kategori 1
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.ek_kategori_1}
+                    onChange={(e) => handleInputChange('ek_kategori_1', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ek Kategori 2
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.ek_kategori_2}
+                    onChange={(e) => handleInputChange('ek_kategori_2', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    EGP Ödeme Türleri
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.egp_odeme_turleri}
+                      onChange={(e) => handleInputChange('egp_odeme_turleri', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                      disabled
+                    />
+                    <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.vakif_aktarim}
+                      onChange={(e) => handleCheckboxChange('vakif_aktarim', e.target.checked)}
+                      className="w-4 h-4 text-[#8746FA] border-gray-300 rounded focus:ring-[#8746FA]"
+                    />
+                    <span className="text-sm text-gray-700">Vakıf Aktarım mı?</span>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Vakıf Üye Kurumu
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.vakif_uye_kurumu}
+                      onChange={(e) => handleInputChange('vakif_uye_kurumu', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                      disabled
+                    />
+                    <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
+                  </div>
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hedef Kitle Açıklaması
+                  </label>
+                  <textarea
+                    value={formData.hedef_kitle_aciklamasi}
+                    onChange={(e) => handleInputChange('hedef_kitle_aciklamasi', e.target.value)}
+                    rows={4}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30 resize-none"
+                  />
                 </div>
               </div>
             </div>

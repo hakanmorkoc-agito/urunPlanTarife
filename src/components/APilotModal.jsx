@@ -17,7 +17,7 @@ const APilotModal = ({ onClose, onSave }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+    <div className="fixed inset-0 bg-gradient-to-br from-indigo-600/80 via-purple-600/80 to-pink-500/80 backdrop-blur-sm flex items-center justify-center z-50 px-4">
       <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-[#8746FA] to-[#7335E8] rounded-t-2xl">

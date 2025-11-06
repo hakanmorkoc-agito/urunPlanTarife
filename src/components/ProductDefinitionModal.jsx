@@ -52,7 +52,7 @@ const ProductDefinitionModal = ({ mode = 'new', onClose, onSelect }) => {
   // Katalog modunda ve step 2'deyse ürün kartlarını göster
   if (mode === 'catalog' && step === 2) {
     return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+      <div className="fixed inset-0 bg-gradient-to-br from-indigo-600/80 via-purple-600/80 to-pink-500/80 backdrop-blur-sm flex items-center justify-center z-50 px-4">
         <div className="w-full max-w-4xl rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-[#8746FA] to-[#7335E8]">
@@ -136,7 +136,7 @@ const ProductDefinitionModal = ({ mode = 'new', onClose, onSelect }) => {
 
   // Step 1: Form (hem new hem catalog için)
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+    <div className="fixed inset-0 bg-gradient-to-br from-indigo-600/80 via-purple-600/80 to-pink-500/80 backdrop-blur-sm flex items-center justify-center z-50 px-4">
       <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
