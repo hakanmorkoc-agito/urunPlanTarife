@@ -351,13 +351,27 @@ const ProductTariffDefinitions = () => {
           .eq('product_tariff_plan_id', productId)
           .order('plan_versiyon_no', { ascending: false })
           .limit(1)
-          .single()
+          .maybeSingle()
 
-        if (!plansError && plansData) {
+        if (plansData) {
+          // Plans tablosunda kayıt varsa, tüm bilgileri al ve versiyon no'yu bir artır
           planData = {
-            ...plansData,
-            // Versiyon no'yu bir artır
-            plan_versiyon_no: String(Number(plansData.plan_versiyon_no || '0') + 1)
+            brans: plansData.brans || productData.brans,
+            ulke: plansData.ulke || productData.ulke,
+            dil: plansData.dil || productData.dil,
+            sozlesme_tipi: plansData.sozlesme_tipi || '',
+            plan_kodu: plansData.plan_kodu || productData.urun_kodu,
+            plan_versiyon_no: String(Number(plansData.plan_versiyon_no || '0') + 1),
+            plan_kisa_adi: plansData.plan_kisa_adi || productData.urun_adi,
+            plan_uzun_adi: plansData.plan_uzun_adi || productData.urun_uzun_adi,
+            basvuru_tipi: plansData.basvuru_tipi || '',
+            kategori_kodu: plansData.kategori_kodu || '',
+            zimmet_tipi: plansData.zimmet_tipi || '',
+            baslangic_tarihi: plansData.baslangic_tarihi || '',
+            bitis_tarihi: plansData.bitis_tarihi || '',
+            durum: plansData.durum || productData.durum || 'Draft',
+            // Orijinal plan ID'sini sakla (yeni versiyon oluşturma için)
+            id: plansData.id
           }
         } else {
           // Plans tablosunda kayıt yoksa, product_tariff_plans'tan oluştur
@@ -365,11 +379,17 @@ const ProductTariffDefinitions = () => {
             brans: productData.brans,
             ulke: productData.ulke,
             dil: productData.dil,
+            sozlesme_tipi: '',
             plan_kodu: productData.urun_kodu,
             plan_versiyon_no: '1',
             plan_kisa_adi: productData.urun_adi,
             plan_uzun_adi: productData.urun_uzun_adi,
-            durum: productData.durum
+            basvuru_tipi: '',
+            kategori_kodu: '',
+            zimmet_tipi: '',
+            baslangic_tarihi: '',
+            bitis_tarihi: '',
+            durum: productData.durum || 'Draft'
           }
         }
       } else {
@@ -377,14 +397,20 @@ const ProductTariffDefinitions = () => {
         const product = products.find(p => p.id === productId)
         if (product) {
           planData = {
-            brans: product.brans,
-            ulke: product.ulke,
-            dil: product.dil,
-            plan_kodu: product.urun_kodu,
+            brans: product.brans || 'Bireysel Emeklilik',
+            ulke: product.ulke || 'Türkiye',
+            dil: product.dil || 'Türkçe',
+            sozlesme_tipi: '',
+            plan_kodu: product.urun_kodu || '',
             plan_versiyon_no: '1',
-            plan_kisa_adi: product.urun_adi,
-            plan_uzun_adi: product.urun_uzun_adi,
-            durum: product.durum
+            plan_kisa_adi: product.urun_adi || '',
+            plan_uzun_adi: product.urun_uzun_adi || product.urun_adi || '',
+            basvuru_tipi: '',
+            kategori_kodu: '',
+            zimmet_tipi: '',
+            baslangic_tarihi: product.gecerlilik_baslangic_tarihi || '',
+            bitis_tarihi: product.gecerlilik_bitis_tarihi || '',
+            durum: product.durum || 'Draft'
           }
         }
       }

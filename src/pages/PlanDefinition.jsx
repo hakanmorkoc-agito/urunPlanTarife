@@ -8,6 +8,7 @@ const PlanDefinition = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [currentStep, setCurrentStep] = useState(1)
+  const [originalPlanId, setOriginalPlanId] = useState(null)
   const [formData, setFormData] = useState({
     // Genel Bilgiler
     brans: 'Bireysel Emeklilik',
@@ -34,10 +35,32 @@ const PlanDefinition = () => {
 
   useEffect(() => {
     if (!id && location.state?.initialSelections) {
-      setFormData((prev) => ({
-        ...prev,
-        ...location.state.initialSelections
-      }))
+      const initialData = location.state.initialSelections
+      // Tüm form alanlarını doldur
+      setFormData({
+        brans: initialData.brans || 'Bireysel Emeklilik',
+        ulke: initialData.ulke || 'Türkiye',
+        dil: initialData.dil || 'Türkçe',
+        sozlesme_tipi: initialData.sozlesme_tipi || '',
+        plan_kodu: initialData.plan_kodu || '',
+        plan_versiyon_no: initialData.plan_versiyon_no || '0',
+        plan_kisa_adi: initialData.plan_kisa_adi || '',
+        plan_uzun_adi: initialData.plan_uzun_adi || '',
+        basvuru_tipi: initialData.basvuru_tipi || '',
+        kategori_kodu: initialData.kategori_kodu || '',
+        zimmet_tipi: initialData.zimmet_tipi || '',
+        baslangic_tarihi: initialData.baslangic_tarihi || '',
+        bitis_tarihi: initialData.bitis_tarihi || '',
+        durum: initialData.durum || 'Draft'
+      })
+      // Eğer düzenleme modundaysa, orijinal plan ID'sini sakla
+      if (location.state?.isEdit && location.state?.originalProductId) {
+        setOriginalPlanId(location.state.originalProductId)
+      }
+      // Eğer state'te plan ID varsa (yeni versiyon oluşturma), onu da sakla
+      if (initialData.id) {
+        setOriginalPlanId(initialData.id)
+      }
     }
   }, [id, location.state])
 
@@ -79,8 +102,8 @@ const PlanDefinition = () => {
     }
 
     try {
-      // Eğer yeni plan ise (id yok), önce product_tariff_plans tablosuna kayıt yap
-      if (!id) {
+      // Eğer yeni plan ise (id yok ve originalPlanId de yok), önce product_tariff_plans tablosuna kayıt yap
+      if (!id && !originalPlanId) {
         const baseCode = (formData.plan_kodu || '').trim() || `PLAN-${Date.now()}`
         let finalCode = baseCode
         let productTariffPlan = null
@@ -134,8 +157,8 @@ const PlanDefinition = () => {
           console.error('Plan kayıt hatası:', planError)
           throw planError
         }
-      } else {
-        // Mevcut plan güncelleme
+      } else if (id) {
+        // URL'den gelen ID ile mevcut plan güncelleme
         // Önce product_tariff_plans'ı güncelle
         const { data: existingPlan } = await supabase
           .from('plans')
@@ -165,6 +188,42 @@ const PlanDefinition = () => {
           .from('plans')
           .update(formData)
           .eq('id', id)
+
+        if (planError) throw planError
+      } else if (originalPlanId) {
+        // Yeni versiyon oluşturma (Değiştir butonundan geliyor)
+        // Önce product_tariff_plans'ı güncelle
+        const { data: existingPlan } = await supabase
+          .from('plans')
+          .select('product_tariff_plan_id')
+          .eq('id', originalPlanId)
+          .single()
+
+        if (existingPlan?.product_tariff_plan_id) {
+          const { error: productError } = await supabase
+            .from('product_tariff_plans')
+            .update({
+              ulke: formData.ulke,
+              dil: formData.dil,
+              brans: formData.brans,
+              durum: formData.durum || 'Draft',
+              urun_kodu: formData.plan_kodu,
+              urun_adi: formData.plan_kisa_adi,
+              urun_uzun_adi: formData.plan_uzun_adi
+            })
+            .eq('id', existingPlan.product_tariff_plan_id)
+
+          if (productError) throw productError
+        }
+
+        // Yeni versiyon olarak plans tablosuna ekle (ID olmadan)
+        const { id: planId, ...planDataWithoutId } = formData
+        const { error: planError } = await supabase
+          .from('plans')
+          .insert([{
+            ...planDataWithoutId,
+            product_tariff_plan_id: existingPlan?.product_tariff_plan_id
+          }])
 
         if (planError) throw planError
       }
