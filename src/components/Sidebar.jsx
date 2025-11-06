@@ -2,17 +2,15 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   SearchOutlined,
-  SettingOutlined,
-  AppstoreOutlined,
+  UnorderedListOutlined,
   WalletOutlined,
   ApartmentOutlined,
-  DatabaseOutlined,
-  ControlOutlined,
-  UserOutlined,
-  SendOutlined,
-  FolderOutlined,
-  ToolOutlined,
-  AppstoreAddOutlined
+  ClockCircleOutlined,
+  AppstoreOutlined,
+  TeamOutlined,
+  MessageOutlined,
+  CalendarOutlined,
+  SettingOutlined
 } from '@ant-design/icons'
 
 const Sidebar = () => {
@@ -24,7 +22,7 @@ const Sidebar = () => {
 
   const menuItems = [
     { id: 'search', icon: SearchOutlined, label: 'Arama Yap' },
-    { id: 'parameters', icon: SettingOutlined, label: 'Parametreler' },
+    { id: 'parameters', icon: UnorderedListOutlined, label: 'Parametreler' },
     {
       id: 'product-tariff',
       icon: AppstoreOutlined,
@@ -45,13 +43,13 @@ const Sidebar = () => {
     },
     { id: 'finance', icon: WalletOutlined, label: 'Finans' },
     { id: 'workflow', icon: ApartmentOutlined, label: 'İş Akışı' },
-    { id: 'background', icon: DatabaseOutlined, label: 'Arka Plan İşlemleri' },
-    { id: 'rules', icon: ControlOutlined, label: 'Kural İşlemleri' },
-    { id: 'customer', icon: UserOutlined, label: 'Müşteri İşlemleri' },
-    { id: 'delivery', icon: SendOutlined, label: 'Gönderi' },
-    { id: 'pool', icon: FolderOutlined, label: 'İş Havuzu' },
-    { id: 'system', icon: ToolOutlined, label: 'Kullanıcı ve Sistem Ayarları' },
-    { id: 'l4u', icon: AppstoreAddOutlined, label: 'L4U Uygulama Menüsü' }
+    { id: 'background', icon: ClockCircleOutlined, label: 'Arka Plan İşlemleri' },
+    { id: 'rules', icon: AppstoreOutlined, label: 'Kural İşlemleri' },
+    { id: 'customer', icon: TeamOutlined, label: 'Müşteri İşlemleri' },
+    { id: 'delivery', icon: MessageOutlined, label: 'Gönderi' },
+    { id: 'pool', icon: CalendarOutlined, label: 'İş Havuzu' },
+    { id: 'system', icon: SettingOutlined, label: 'Kullanıcı ve Sistem Ayarları' },
+    { id: 'l4u', icon: AppstoreOutlined, label: 'L4U Uygulama Menüsü' }
   ]
 
   const isItemActive = (itemPath, active) => {
@@ -98,15 +96,15 @@ const Sidebar = () => {
 
   return (
     <>
-      <aside className="relative z-20 w-16 flex flex-col items-center bg-[#8746FA] text-white shadow-lg overflow-hidden">
+      <aside className="relative z-20 w-14 flex flex-col items-center bg-[#8746FA] text-white shadow-lg overflow-hidden">
         {/* Logo */}
-        <div className="pt-6 pb-4">
+        <div className="pt-4 pb-3">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+            className="flex items-center justify-center transition-colors"
             aria-label="Dashboard'a dön"
           >
-            <span className="text-2xl font-bold text-white">a</span>
+            <span className="font-bold text-white" style={{ fontSize: '44.8px' }}>ꭤ</span>
           </button>
         </div>
         <nav className="flex-1 flex flex-col items-center justify-center space-y-3 py-4 px-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
@@ -136,10 +134,10 @@ const Sidebar = () => {
                     tooltip.style.opacity = '0'
                   }
                 }}
-                className={`group relative flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-200 ${
+                className={`group relative flex h-10 w-10 items-center justify-center transition-all duration-200 ${
                   isActive
-                    ? 'bg-white text-[#8746FA] shadow-lg ring-2 ring-white/40'
-                    : 'bg-white/10 text-white hover:bg-white/20'
+                    ? 'bg-white text-[#8746FA] shadow-lg'
+                    : 'text-white hover:bg-white/10'
                 }`}
                 aria-label={item.label}
               >
