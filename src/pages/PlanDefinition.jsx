@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { X, Info, Save, ChevronsRight } from 'lucide-react'
+import { X, Info, Save, ChevronsRight, ChevronDown } from 'lucide-react'
 
-const PlanDefinition = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const location = useLocation()
+const PlanDefinitionModal = ({ isOpen, onClose, initialData, onSave }) => {
   const [currentStep, setCurrentStep] = useState(1)
   const [originalPlanId, setOriginalPlanId] = useState(null)
+  const [openDropdowns, setOpenDropdowns] = useState({
+    basvuru_tipi: false,
+    zimmet_tipi: false
+  })
   const [formData, setFormData] = useState({
     // Genel Bilgiler
     brans: 'Bireysel Emeklilik',
@@ -19,9 +19,9 @@ const PlanDefinition = () => {
     plan_versiyon_no: '0',
     plan_kisa_adi: '',
     plan_uzun_adi: '',
-    basvuru_tipi: '',
+    basvuru_tipi: [],
     kategori_kodu: '',
-    zimmet_tipi: '',
+    zimmet_tipi: [],
     baslangic_tarihi: '',
     bitis_tarihi: '',
     durum: 'Draft',
@@ -44,14 +44,7 @@ const PlanDefinition = () => {
   })
 
   useEffect(() => {
-    if (id) {
-      fetchPlanData(id)
-    }
-  }, [id])
-
-  useEffect(() => {
-    if (!id && location.state?.initialSelections) {
-      const initialData = location.state.initialSelections
+    if (initialData) {
       // Tüm form alanlarını doldur
       setFormData({
         brans: initialData.brans || 'Bireysel Emeklilik',
@@ -62,9 +55,9 @@ const PlanDefinition = () => {
         plan_versiyon_no: initialData.plan_versiyon_no || '0',
         plan_kisa_adi: initialData.plan_kisa_adi || '',
         plan_uzun_adi: initialData.plan_uzun_adi || '',
-        basvuru_tipi: initialData.basvuru_tipi || '',
+        basvuru_tipi: Array.isArray(initialData.basvuru_tipi) ? initialData.basvuru_tipi : (initialData.basvuru_tipi ? [initialData.basvuru_tipi] : []),
         kategori_kodu: initialData.kategori_kodu || '',
-        zimmet_tipi: initialData.zimmet_tipi || '',
+        zimmet_tipi: Array.isArray(initialData.zimmet_tipi) ? initialData.zimmet_tipi : (initialData.zimmet_tipi ? [initialData.zimmet_tipi] : []),
         baslangic_tarihi: initialData.baslangic_tarihi || '',
         bitis_tarihi: initialData.bitis_tarihi || '',
         durum: initialData.durum || 'Draft',
@@ -85,16 +78,15 @@ const PlanDefinition = () => {
         vakif_uye_kurumu: initialData.vakif_uye_kurumu || '',
         hedef_kitle_aciklamasi: initialData.hedef_kitle_aciklamasi || ''
       })
-      // Eğer düzenleme modundaysa, orijinal plan ID'sini sakla
-      if (location.state?.isEdit && location.state?.originalProductId) {
-        setOriginalPlanId(location.state.originalProductId)
-      }
       // Eğer state'te plan ID varsa (yeni versiyon oluşturma), onu da sakla
       if (initialData.id) {
         setOriginalPlanId(initialData.id)
       }
+      if (initialData.originalProductId) {
+        setOriginalPlanId(initialData.originalProductId)
+      }
     }
-  }, [id, location.state])
+  }, [initialData])
 
   const fetchPlanData = async (planId) => {
     try {
@@ -129,6 +121,51 @@ const PlanDefinition = () => {
 
   const handleCheckboxChange = (field, checked) => {
     setFormData(prev => ({ ...prev, [field]: checked }))
+  }
+
+  const handleMultiSelectChange = (field, value) => {
+    setFormData(prev => {
+      const currentValues = prev[field] || []
+      if (currentValues.includes(value)) {
+        return { ...prev, [field]: currentValues.filter(v => v !== value) }
+      } else {
+        return { ...prev, [field]: [...currentValues, value] }
+      }
+    })
+  }
+
+  const isZimmetTipiEnabled = formData.basvuru_tipi.includes('Matbu')
+  const isGecerliSozlesmeCinsiEnabled = formData.sozlesme_tipi === 'Grup'
+
+  // Dropdown dışına tıklanınca kapat
+  const basvuruTipiRef = useRef(null)
+  const zimmetTipiRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (basvuruTipiRef.current && !basvuruTipiRef.current.contains(event.target)) {
+        setOpenDropdowns(prev => ({ ...prev, basvuru_tipi: false }))
+      }
+      if (zimmetTipiRef.current && !zimmetTipiRef.current.contains(event.target)) {
+        setOpenDropdowns(prev => ({ ...prev, zimmet_tipi: false }))
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  const toggleDropdown = (field) => {
+    setOpenDropdowns(prev => ({ ...prev, [field]: !prev[field] }))
+  }
+
+  const getSelectedText = (field, options) => {
+    const selected = formData[field] || []
+    if (selected.length === 0) return 'Seçiniz'
+    if (selected.length <= 2) return selected.join(', ')
+    return `${selected.length} seçili`
   }
 
   const handleSave = async () => {
@@ -193,8 +230,8 @@ const PlanDefinition = () => {
           console.error('Plan kayıt hatası:', planError)
           throw planError
         }
-      } else if (id) {
-        // URL'den gelen ID ile mevcut plan güncelleme
+      } else if (originalPlanId) {
+        // Yeni versiyon oluşturma (Değiştir butonundan geliyor)
         // Önce product_tariff_plans'ı güncelle
         const { data: existingPlan } = await supabase
           .from('plans')
@@ -273,21 +310,27 @@ const PlanDefinition = () => {
     }
   }
 
+  if (!isOpen) return null
+
   return (
-    <div className="p-6">
-      {/* Step Navigation */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Plan Tanımı</h1>
+    <div className="fixed inset-0 bg-gradient-to-br from-indigo-600/80 via-purple-600/80 to-pink-500/80 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-8 overflow-y-auto">
+      <div className="w-full max-w-[95vw] max-h-[95vh] bg-white rounded-2xl shadow-2xl flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-[#8746FA] to-[#7335E8] rounded-t-2xl">
+          <h1 className="text-xl font-semibold text-white">Plan Tanımı</h1>
           <button
-            onClick={() => navigate('/urun-tarife-tanimlari')}
-            className="text-gray-400 hover:text-gray-600"
+            onClick={onClose}
+            className="text-white hover:bg-white/20 rounded-full p-1 transition"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
-        
-        <div className="flex items-center space-x-4 overflow-x-auto pb-2">
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {/* Step Navigation */}
+          <div className="mb-6">
+            <div className="flex items-center space-x-4 overflow-x-auto pb-2">
           {steps.map((step, index) => {
             const isActive = currentStep === step.number
             const isCompleted = step.number < currentStep
@@ -331,7 +374,7 @@ const PlanDefinition = () => {
         {currentStep === 1 && (
           <div className="space-y-8">
             {/* Üst 3 Alan */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Branş
@@ -383,7 +426,7 @@ const PlanDefinition = () => {
             {/* Plan Tipi-Adı */}
             <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Plan Tipi-Adı</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Sözleşme Tipi <span className="text-red-500">*</span>
@@ -462,16 +505,33 @@ const PlanDefinition = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Başvuru Tipi <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    value={formData.basvuru_tipi}
-                    onChange={(e) => handleInputChange('basvuru_tipi', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
-                    required
-                  >
-                    <option value="">Seçiniz</option>
-                    <option value="Online">Online</option>
-                    <option value="Offline">Offline</option>
-                  </select>
+                  <div className="relative" ref={basvuruTipiRef}>
+                    <button
+                      type="button"
+                      onClick={() => toggleDropdown('basvuru_tipi')}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30"
+                    >
+                      <span className={formData.basvuru_tipi.length === 0 ? 'text-gray-400' : 'text-gray-700'}>
+                        {getSelectedText('basvuru_tipi', ['Online', 'Offline', 'Matbu'])}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${openDropdowns.basvuru_tipi ? 'rotate-180' : ''}`} />
+                    </button>
+                    {openDropdowns.basvuru_tipi && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                        {['Online', 'Offline', 'Matbu'].map((option) => (
+                          <label key={option} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={formData.basvuru_tipi.includes(option)}
+                              onChange={() => handleMultiSelectChange('basvuru_tipi', option)}
+                              className="w-4 h-4 text-[#8746FA] border-gray-300 rounded focus:ring-[#8746FA]"
+                            />
+                            <span className="text-sm text-gray-700">{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -491,15 +551,54 @@ const PlanDefinition = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Zimmet Tipi
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.zimmet_tipi}
-                      onChange={(e) => handleInputChange('zimmet_tipi', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
-                      disabled
-                    />
-                    <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
+                  <div className="relative" ref={zimmetTipiRef}>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => isZimmetTipiEnabled && toggleDropdown('zimmet_tipi')}
+                        disabled={!isZimmetTipiEnabled}
+                        className={`w-full px-4 py-2 border border-gray-300 rounded-lg text-left flex items-center justify-between focus:ring-2 focus:ring-[#8746FA]/30 ${
+                          !isZimmetTipiEnabled
+                            ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                            : 'bg-white focus:border-[#8746FA]'
+                        }`}
+                      >
+                        <span className={formData.zimmet_tipi.length === 0 ? 'text-gray-400' : 'text-gray-700'}>
+                          {formData.zimmet_tipi.length === 0 
+                            ? 'Seçiniz' 
+                            : formData.zimmet_tipi.map(v => `Zimmet Tipi ${v.replace('Zimmet', '')}`).join(', ')}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="group relative">
+                            <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                            <div className="absolute right-0 top-6 hidden group-hover:block z-20">
+                              <div className="bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap shadow-lg">
+                                Zimmet tipi Matbu seçili olmalıdır
+                              </div>
+                            </div>
+                          </div>
+                          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${openDropdowns.zimmet_tipi ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+                        {openDropdowns.zimmet_tipi && isZimmetTipiEnabled && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                          {['Zimmet Tipi 1', 'Zimmet Tipi 2', 'Zimmet Tipi 3'].map((option) => {
+                            const value = option.replace('Zimmet Tipi ', 'Zimmet')
+                            return (
+                              <label key={value} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={formData.zimmet_tipi.includes(value)}
+                                  onChange={() => handleMultiSelectChange('zimmet_tipi', value)}
+                                  className="w-4 h-4 text-[#8746FA] border-gray-300 rounded focus:ring-[#8746FA]"
+                                />
+                                <span className="text-sm text-gray-700">{option}</span>
+                              </label>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -508,7 +607,7 @@ const PlanDefinition = () => {
             {/* Plan Tarih-Durum */}
             <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Plan Tarih-Durum</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Başlangıç Tarihi <span className="text-red-500">*</span>
@@ -582,14 +681,30 @@ const PlanDefinition = () => {
                     Geçerli Sözleşme Cinsi
                   </label>
                   <div className="relative">
-                    <input
-                      type="text"
+                    <select
                       value={formData.gecerli_sozlesme_cinsi}
                       onChange={(e) => handleInputChange('gecerli_sozlesme_cinsi', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
-                      disabled
-                    />
-                    <Info className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
+                      disabled={!isGecerliSozlesmeCinsiEnabled}
+                      className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-[#8746FA] focus:ring-2 focus:ring-[#8746FA]/30 ${
+                        !isGecerliSozlesmeCinsiEnabled 
+                          ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
+                          : 'bg-white'
+                      }`}
+                    >
+                      <option value="">Seçiniz</option>
+                      <option value="İGES">İGES</option>
+                      <option value="GBB">GBB</option>
+                    </select>
+                    <div className="absolute right-3 top-3 group">
+                      <Info className={`w-4 h-4 ${isGecerliSozlesmeCinsiEnabled ? 'text-gray-400' : 'text-gray-400'} cursor-help`} />
+                      {!isGecerliSozlesmeCinsiEnabled && (
+                        <div className="absolute right-0 top-6 hidden group-hover:block z-10">
+                          <div className="bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap shadow-lg">
+                            Sözleşme Tipi alanında Grup seçili olmalıdır
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -598,7 +713,7 @@ const PlanDefinition = () => {
             {/* Finansal ve Müşteri Kriterleri */}
             <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Finansal ve Müşteri Kriterleri</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Kur Tipi <span className="text-red-500">*</span>
@@ -698,7 +813,7 @@ const PlanDefinition = () => {
             {/* Ek Detaylar */}
             <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Ek Detaylar</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Ek Kategori 1
@@ -767,7 +882,7 @@ const PlanDefinition = () => {
                   </div>
                 </div>
 
-                <div className="md:col-span-3">
+                <div className="md:col-span-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Hedef Kitle Açıklaması
                   </label>
@@ -790,8 +905,17 @@ const PlanDefinition = () => {
           </div>
         )}
 
-        {/* Navigation Buttons */}
-        <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t">
+        </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+          >
+            Vazgeç
+          </button>
           <button
             onClick={() => currentStep > 1 && setCurrentStep(currentStep - 1)}
             disabled={currentStep === 1}
@@ -828,5 +952,5 @@ const PlanDefinition = () => {
   )
 }
 
-export default PlanDefinition
+export default PlanDefinitionModal
 

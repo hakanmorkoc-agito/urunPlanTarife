@@ -4,12 +4,15 @@ import { supabase } from '../lib/supabase'
 import { Search, Edit2, Copy, Trash2 } from 'lucide-react'
 import ProductDefinitionModal from '../components/ProductDefinitionModal'
 import APilotModal from '../components/APilotModal'
+import PlanDefinitionModal from './PlanDefinition'
 
 const ProductTariffDefinitions = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [showModal, setShowModal] = useState(false)
   const [showAPilotModal, setShowAPilotModal] = useState(false)
+  const [showPlanModal, setShowPlanModal] = useState(false)
+  const [planModalData, setPlanModalData] = useState(null)
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [hoveredProductId, setHoveredProductId] = useState(null)
@@ -225,11 +228,8 @@ const ProductTariffDefinitions = () => {
     setPendingMethod(null)
 
     if (selectedMethod === 'new') {
-      navigate('/plan-tanimi', {
-        state: {
-          initialSelections: data
-        }
-      })
+      setPlanModalData(data)
+      setShowPlanModal(true)
     }
   }
 
@@ -411,15 +411,11 @@ const ProductTariffDefinitions = () => {
       }
 
       if (planData) {
-        navigate('/plan-tanimi', {
-          state: {
-            initialSelections: planData,
-            isEdit: true,
-            originalProductId: productId
-          }
+        setPlanModalData({
+          ...planData,
+          originalProductId: productId
         })
-      } else {
-        navigate(`/plan-tanimi/${productId}`)
+        setShowPlanModal(true)
       }
     } catch (error) {
       console.error('Plan bilgileri alınırken hata:', error)
@@ -596,7 +592,10 @@ const ProductTariffDefinitions = () => {
                     <tr
                       key={product.id}
                       className="relative cursor-pointer transition"
-                      onClick={() => navigate(`/plan-tanimi/${product.id}`)}
+                      onClick={() => {
+                        setPlanModalData({ id: product.id })
+                        setShowPlanModal(true)
+                      }}
                       onMouseEnter={() => setHoveredProductId(product.id)}
                       onMouseLeave={() => setHoveredProductId(null)}
                     >
@@ -796,6 +795,19 @@ const ProductTariffDefinitions = () => {
           onSave={handleAPilotSave}
         />
       )}
+
+      <PlanDefinitionModal
+        isOpen={showPlanModal}
+        onClose={() => {
+          setShowPlanModal(false)
+          setPlanModalData(null)
+        }}
+        initialData={planModalData}
+        onSave={() => {
+          // Liste sayfasını yenile
+          fetchProducts()
+        }}
+      />
     </div>
   )
 }
